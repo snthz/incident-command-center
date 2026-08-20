@@ -183,7 +183,6 @@ function BoardCard({
           options={statusValues.map((status) => ({
             value: status,
             label: statusLabels[status],
-            icon: <StatusIcon status={status} />,
           }))}
         />
       </div>
