@@ -40,6 +40,7 @@ model Profile {
 
 model Incident {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String           @unique @default(dbgenerated("('ICC-'::text || nextval('incident_key_seq'::regclass))"))
   title       String
   description String
   severity    IncidentSeverity

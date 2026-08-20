@@ -20,6 +20,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
       <table className="w-full min-w-180 border-collapse text-sm">
         <thead>
           <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">
+            <th scope="col" className="px-4 py-2.5 font-medium">Key</th>
             <th scope="col" className="px-4 py-2.5 font-medium">Incident</th>
             <th scope="col" className="px-4 py-2.5 font-medium">Severity</th>
             <th scope="col" className="px-4 py-2.5 font-medium">Status</th>
@@ -34,9 +35,17 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
               key={incident.id}
               className="border-b border-line last:border-b-0 hover:bg-surface"
             >
+              <td className="px-4 py-3">
+                <Link
+                  href={`/incidents/${incident.key}`}
+                  className="font-mono text-xs text-muted hover:text-foreground hover:underline"
+                >
+                  {incident.key}
+                </Link>
+              </td>
               <td className="max-w-md px-4 py-3">
                 <Link
-                  href={`/incidents/${incident.id}`}
+                  href={`/incidents/${incident.key}`}
                   className="font-medium text-foreground hover:underline"
                 >
                   {incident.title}

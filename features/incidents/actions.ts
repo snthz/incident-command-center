@@ -31,5 +31,6 @@ export async function updateIncidentStatus(input: {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/incidents/[key]", "page");
   return {};
 }

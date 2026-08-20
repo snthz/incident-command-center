@@ -9,7 +9,6 @@ import { cn } from "@/lib/cn";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
 import { updateIncidentStatus } from "./actions";
 import { SeverityBadge, StatusIcon } from "./badges";
-import { OwnerChip } from "./owner-chip";
 import type { IncidentListItem } from "./queries";
 import { statusLabels, statusValues } from "./schema";
 
@@ -165,7 +164,7 @@ function BoardCard({
     >
       <Link
         draggable={false}
-        href={`/incidents/${incident.id}`}
+        href={`/incidents/${incident.key}`}
         className="text-sm text-foreground hover:underline"
       >
         {incident.title}
@@ -187,8 +186,24 @@ function BoardCard({
         />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
-        <OwnerChip owner={incident.owner} />
-        <TimeAgo date={incident.updatedAt} className="text-xs text-muted" />
+        <span className="font-mono text-[11px] text-muted">{incident.key}</span>
+        <span className="flex items-center gap-2">
+          <TimeAgo date={incident.updatedAt} className="text-xs text-muted" />
+          {incident.owner ? (
+            <span
+              title={incident.owner.name}
+              className="flex size-5 items-center justify-center rounded-full bg-surface-2 text-[9px] font-semibold text-neutral-300"
+            >
+              {incident.owner.name
+                .split(" ")
+                .map((part) => part[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+              <span className="sr-only">{incident.owner.name}</span>
+            </span>
+          ) : null}
+        </span>
       </div>
     </li>
   );

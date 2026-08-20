@@ -1,28 +1,113 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { TimeAgo } from "@/components/ui/time-ago";
 import { requireUser } from "@/lib/dal";
-import { prisma } from "@/lib/prisma";
-import { SeverityBadge, StatusBadge } from "@/features/incidents/badges";
-import { uuidPattern } from "@/features/incidents/schema";
+import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
+import { SeverityBadge } from "@/features/incidents/badges";
+import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
+import { OwnerChip } from "@/features/incidents/owner-chip";
+import { getIncident } from "@/features/incidents/queries";
+import { incidentKeyPattern } from "@/features/incidents/schema";
+import { StatusSelect } from "@/features/incidents/status-select";
 
-export default async function IncidentDetailPage({ params }: PageProps<"/incidents/[id]">) {
+export async function generateMetadata({
+  params,
+}: PageProps<"/incidents/[key]">): Promise<Metadata> {
+  const { key } = await params;
+  if (!incidentKeyPattern.test(key)) return { title: "Incident not found" };
+  const incident = await getIncident(key);
+  return {
+    title: incident
+      ? `[${incident.key}] ${incident.title}`
+      : "Incident not found",
+  };
+}
+
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[110px_1fr] items-center gap-3 px-4 py-2.5">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dd className="text-sm text-neutral-300">{children}</dd>
+    </div>
+  );
+}
+
+export default async function IncidentDetailPage({ params }: PageProps<"/incidents/[key]">) {
   await requireUser();
-  const { id } = await params;
-  if (!uuidPattern.test(id)) notFound();
+  const { key } = await params;
+  if (!incidentKeyPattern.test(key)) notFound();
 
-  const incident = await prisma.incident.findUnique({ where: { id } });
+  const incident = await getIncident(key);
   if (!incident) notFound();
 
   return (
-    <article className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <SeverityBadge severity={incident.severity} />
-        <StatusBadge status={incident.status} />
+    <article className="flex flex-col gap-5">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+        <Link href="/dashboard" className="text-muted hover:text-foreground">
+          Incidents
+        </Link>
+        <span aria-hidden className="text-neutral-600">/</span>
+        <span className="font-mono text-xs text-muted">{incident.key}</span>
+      </nav>
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="flex min-w-0 flex-col gap-8">
+          <h1 className="text-2xl font-semibold text-foreground">{incident.title}</h1>
+
+          <section aria-label="Description">
+            <h2 className="mb-2 text-sm font-semibold text-foreground">Description</h2>
+            <p className="max-w-3xl text-sm leading-relaxed text-neutral-300">
+              {incident.description}
+            </p>
+          </section>
+
+          <section aria-label="Activity" className="min-w-0">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Activity</h2>
+            <FeedErrorBoundary>
+              <Suspense fallback={<ActivityFeedSkeleton />}>
+                <ActivityFeed incidentId={incident.id} />
+              </Suspense>
+            </FeedErrorBoundary>
+          </section>
+        </div>
+
+        <aside aria-label="Incident details" className="flex h-fit flex-col gap-4">
+          <div className="w-fit">
+            <StatusSelect
+              incidentId={incident.id}
+              incidentKey={incident.key}
+              status={incident.status}
+            />
+          </div>
+
+          <div className="rounded-lg border border-line">
+            <h2 className="border-b border-line px-4 py-3 text-sm font-semibold text-foreground">
+              Details
+            </h2>
+            <dl className="flex flex-col divide-y divide-line">
+              <DetailRow label="Assignee">
+                <OwnerChip owner={incident.owner} />
+              </DetailRow>
+              <DetailRow label="Severity">
+                <SeverityBadge severity={incident.severity} />
+              </DetailRow>
+              <DetailRow label="Created">
+                <TimeAgo date={incident.createdAt} />
+              </DetailRow>
+              <DetailRow label="Last updated">
+                <TimeAgo date={incident.updatedAt} />
+              </DetailRow>
+              {incident.resolvedAt ? (
+                <DetailRow label="Resolved">
+                  <TimeAgo date={incident.resolvedAt} />
+                </DetailRow>
+              ) : null}
+            </dl>
+          </div>
+        </aside>
       </div>
-      <h1 className="text-xl font-semibold text-foreground">{incident.title}</h1>
-      <p className="text-sm text-muted">{incident.description}</p>
-      <p className="rounded-md border border-dashed border-line px-4 py-3 text-sm text-muted">
-        Full incident detail with activity feed lands in Phase 4.
-      </p>
     </article>
   );
 }

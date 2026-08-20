@@ -1,9 +1,11 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import type { IncidentFilters } from "./schema";
 
 export const RESOLVED_WINDOW_DAYS = 7;
 const STATS_STREAM_DELAY_MS = 900;
+const FEED_STREAM_DELAY_MS = 1200;
 
 const incidentListInclude = {
   owner: true,
@@ -51,6 +53,29 @@ export async function getRecentlyResolved(filters: IncidentFilters) {
     orderBy: { resolvedAt: "desc" },
   });
 }
+
+export const getIncident = cache(async (key: string) => {
+  return prisma.incident.findUnique({
+    where: { key: key.toUpperCase() },
+    include: { owner: true },
+  });
+});
+
+export type IncidentDetail = NonNullable<Awaited<ReturnType<typeof getIncident>>>;
+
+export async function getIncidentUpdates(incidentId: string) {
+  await new Promise((resolve) => setTimeout(resolve, FEED_STREAM_DELAY_MS));
+
+  return prisma.incidentUpdate.findMany({
+    where: { incidentId },
+    include: { author: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export type IncidentUpdateItem = Awaited<
+  ReturnType<typeof getIncidentUpdates>
+>[number];
 
 export async function getSeverityStats() {
   await new Promise((resolve) => setTimeout(resolve, STATS_STREAM_DELAY_MS));
