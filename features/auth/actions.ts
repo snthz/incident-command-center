@@ -1,9 +1,14 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { signInSchema } from "./schema";
 
-export type SignInState = { error?: string };
+export type SignInState = {
+  error?: string;
+  fieldErrors?: { email?: string; password?: string };
+};
 
 function safeRedirect(target: unknown): string {
   if (typeof target === "string" && target.startsWith("/") && !target.startsWith("//")) {
@@ -16,15 +21,23 @@ export async function signIn(
   _prev: SignInState,
   formData: FormData,
 ): Promise<SignInState> {
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const parsed = signInSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
 
-  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-    return { error: "Email and password are required." };
+  if (!parsed.success) {
+    const { fieldErrors } = z.flattenError(parsed.error);
+    return {
+      fieldErrors: {
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      },
+    };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     // Never surface raw backend errors

@@ -6,8 +6,8 @@ export default async function DashboardPage() {
 
   return (
     <section>
-      <h1 className="text-xl font-semibold text-slate-100">Dashboard</h1>
-      <p className="mt-2 text-sm text-slate-400">Incident list coming next.</p>
+      <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+      <p className="mt-2 text-sm text-muted">Incident list coming next.</p>
     </section>
   );
 }
