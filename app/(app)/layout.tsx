@@ -2,12 +2,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { UserMenu } from "@/features/auth/user-menu";
 import { Logo } from "@/features/branding/logo";
-import { LoadingScreen } from "@/components/ui/loading-screen";
-
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
     <div className="flex min-h-full flex-1 flex-col">
       <a href="#main" className="skip-link">
         Skip to content
@@ -34,6 +31,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
     </div>
-    </>
   );
 }
