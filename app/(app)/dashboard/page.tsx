@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const view = parseDashboardView(params.view);
 
   const effectiveFilters =
-    view === "board" ? { severity: filters.severity } : filters;
+    view === "board" ? { severity: filters.severity, q: filters.q } : filters;
   const includeActive =
     view === "board" || effectiveFilters.status !== "resolved";
   const includeResolved =

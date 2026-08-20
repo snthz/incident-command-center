@@ -22,6 +22,7 @@ export const uuidPattern =
 export const incidentFiltersSchema = z.object({
   status: z.enum(IncidentStatus).optional().catch(undefined),
   severity: z.enum(IncidentSeverity).optional().catch(undefined),
+  q: z.string().trim().min(1).max(120).optional().catch(undefined),
 });
 
 export type IncidentFilters = z.infer<typeof incidentFiltersSchema>;
@@ -32,6 +33,7 @@ export function parseIncidentFilters(
   return incidentFiltersSchema.parse({
     status: params.status,
     severity: params.severity,
+    q: params.q,
   });
 }
 

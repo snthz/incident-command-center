@@ -109,6 +109,21 @@ body {
   animation: icc-node-ping 2.6s ease-out infinite;
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.toast-enter {
+  animation: toast-in 0.18s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

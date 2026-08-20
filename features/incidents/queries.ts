@@ -10,6 +10,16 @@ const incidentListInclude = {
   _count: { select: { updates: true } },
 } as const;
 
+function searchClause(q: string | undefined) {
+  if (!q) return {};
+  return {
+    OR: [
+      { title: { contains: q, mode: "insensitive" as const } },
+      { description: { contains: q, mode: "insensitive" as const } },
+    ],
+  };
+}
+
 export type IncidentListItem = Awaited<
   ReturnType<typeof getActiveIncidents>
 >[number];
@@ -19,6 +29,7 @@ export async function getActiveIncidents(filters: IncidentFilters) {
     where: {
       status: filters.status ?? { not: "resolved" },
       severity: filters.severity,
+      ...searchClause(filters.q),
     },
     include: incidentListInclude,
     orderBy: { updatedAt: "desc" },
@@ -34,6 +45,7 @@ export async function getRecentlyResolved(filters: IncidentFilters) {
       status: "resolved",
       resolvedAt: { gte: windowStart },
       severity: filters.severity,
+      ...searchClause(filters.q),
     },
     include: incidentListInclude,
     orderBy: { resolvedAt: "desc" },

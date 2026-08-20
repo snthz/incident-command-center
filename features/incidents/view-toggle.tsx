@@ -30,6 +30,7 @@ export function ViewToggle({
   function hrefFor(target: DashboardView) {
     const params = new URLSearchParams();
     if (filters.severity) params.set("severity", filters.severity);
+    if (filters.q) params.set("q", filters.q);
     if (target === "list") {
       if (filters.status) params.set("status", filters.status);
       params.set("view", "list");

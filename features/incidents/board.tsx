@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
 import { TimeAgo } from "@/components/ui/time-ago";
+import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
 import { updateIncidentStatus } from "./actions";
@@ -23,9 +24,8 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
   );
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<IncidentStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [announcement, setAnnouncement] = useState("");
   const [, startTransition] = useTransition();
+  const toast = useToast();
 
   const pendingIds = new Set(
     optimisticIncidents
@@ -40,32 +40,27 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
   function moveIncident(id: string, status: IncidentStatus) {
     const incident = optimisticIncidents.find((item) => item.id === id);
     if (!incident || incident.status === status) return;
-    setError(null);
+    const toastId = toast.push(
+      "loading",
+      `Moving "${incident.title}" to ${statusLabels[status]}…`,
+    );
     startTransition(async () => {
       applyMove({ id, status });
       const result = await updateIncidentStatus({ id, status });
       if (result.error) {
-        setError(result.error);
+        toast.update(toastId, "error", result.error);
       } else {
-        setAnnouncement(`"${incident.title}" moved to ${statusLabels[status]}.`);
+        toast.update(
+          toastId,
+          "success",
+          `"${incident.title}" moved to ${statusLabels[status]}`,
+        );
       }
     });
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
-        >
-          {error}
-        </p>
-      ) : null}
-      <p aria-live="polite" className="sr-only">
-        {announcement}
-      </p>
-
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {statusValues.map((status) => {
           const items = optimisticIncidents.filter(
@@ -158,9 +153,8 @@ function BoardCard({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex cursor-grab flex-col gap-2 rounded-md border border-line bg-surface p-3 transition-opacity active:cursor-grabbing",
+        "flex cursor-grab flex-col gap-2 rounded-md border border-line bg-surface p-3 active:cursor-grabbing",
         dragging && "opacity-40",
-        pending && "opacity-60",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -193,10 +187,7 @@ function BoardCard({
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
         <OwnerChip owner={incident.owner} />
-        <span className="flex items-center gap-1.5 text-xs text-muted">
-          {pending ? <span>Saving…</span> : null}
-          <TimeAgo date={incident.updatedAt} />
-        </span>
+        <TimeAgo date={incident.updatedAt} className="text-xs text-muted" />
       </div>
     </li>
   );

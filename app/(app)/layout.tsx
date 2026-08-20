@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { ToastProvider } from "@/components/ui/toaster";
 import { UserMenu } from "@/features/auth/user-menu";
 import { Logo } from "@/features/branding/logo";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <ToastProvider>
     <div className="flex min-h-full flex-1 flex-col">
       <a href="#main" className="skip-link">
         Skip to content
@@ -31,5 +33,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
     </div>
+    </ToastProvider>
   );
 }
