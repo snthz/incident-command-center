@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IncidentSeverity {
+  critical
+  high
+  medium
+  low
+
+  @@map("incident_severity")
+}
+
+enum IncidentStatus {
+  investigating
+  identified
+  monitoring
+  resolved
+
+  @@map("incident_status")
+}
+
+model Profile {
+  id        String   @id @db.Uuid
+  name      String
+  email     String
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ownedIncidents Incident[]
+  updates        IncidentUpdate[]
+
+  @@map("profiles")
+}
+
+model Incident {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String
+  severity    IncidentSeverity
+  status      IncidentStatus   @default(investigating)
+  ownerId     String?          @map("owner_id") @db.Uuid
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  resolvedAt  DateTime?        @map("resolved_at") @db.Timestamptz(6)
+
+  owner   Profile?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  updates IncidentUpdate[]
+
+  @@index([status])
+  @@index([severity])
+  @@map("incidents")
+}
+
+model IncidentUpdate {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  authorId   String?  @map("author_id") @db.Uuid
+  message    String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, createdAt])
+  @@map("incident_updates")
+}
