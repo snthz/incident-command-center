@@ -115,29 +115,29 @@ export function IncidentFiltersBar({
         <SelectField
           label="Status"
           value={filters.status ?? ""}
-          onChange={(event) => apply("status", event.target.value)}
-        >
-          <option value="">All</option>
-          {statusValues.map((status) => (
-            <option key={status} value={status}>
-              {statusLabels[status]}
-            </option>
-          ))}
-        </SelectField>
+          onChange={(value) => apply("status", value)}
+          options={[
+            { value: "", label: "All" },
+            ...statusValues.map((status) => ({
+              value: status,
+              label: statusLabels[status],
+            })),
+          ]}
+        />
       ) : null}
 
       <SelectField
         label="Severity"
         value={filters.severity ?? ""}
-        onChange={(event) => apply("severity", event.target.value)}
-      >
-        <option value="">All</option>
-        {severityValues.map((severity) => (
-          <option key={severity} value={severity}>
-            {severityLabels[severity]}
-          </option>
-        ))}
-      </SelectField>
+        onChange={(value) => apply("severity", value)}
+        options={[
+          { value: "", label: "All" },
+          ...severityValues.map((severity) => ({
+            value: severity,
+            label: severityLabels[severity],
+          })),
+        ]}
+      />
 
       {hasFilters ? (
         <Button

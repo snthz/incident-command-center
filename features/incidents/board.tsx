@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useOptimistic, useState, useTransition } from "react";
+import { Select } from "@/components/ui/select";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
@@ -159,24 +160,18 @@ function BoardCard({
     >
       <div className="flex items-center justify-between gap-2">
         <SeverityBadge severity={incident.severity} />
-        <label className="sr-only" htmlFor={`move-${incident.id}`}>
-          Change status of {incident.title}
-        </label>
-        <select
-          id={`move-${incident.id}`}
+        <Select
+          size="sm"
+          align="end"
+          aria-label={`Change status of ${incident.title}`}
           value={incident.status}
           disabled={pending}
-          onChange={(event) =>
-            onMove(incident.id, event.target.value as IncidentStatus)
-          }
-          className="rounded border border-line bg-surface-2 px-1 py-0.5 text-[11px] text-muted"
-        >
-          {statusValues.map((status) => (
-            <option key={status} value={status}>
-              {statusLabels[status]}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => onMove(incident.id, value as IncidentStatus)}
+          options={statusValues.map((status) => ({
+            value: status,
+            label: statusLabels[status],
+          }))}
+        />
       </div>
       <Link
         draggable={false}
