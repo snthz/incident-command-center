@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimeAgo } from "@/components/ui/time-ago";
-import { SeverityBadge, StatusBadge } from "./badges";
+import { SeverityBadge, StatusLabel } from "./badges";
 import { OwnerChip } from "./owner-chip";
 import type { IncidentListItem } from "./queries";
 
@@ -17,7 +17,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
 
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
-      <table className="w-full min-w-[720px] border-collapse text-sm">
+      <table className="w-full min-w-180 border-collapse text-sm">
         <thead>
           <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">
             <th scope="col" className="px-4 py-2.5 font-medium">Incident</th>
@@ -49,7 +49,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
                 <SeverityBadge severity={incident.severity} />
               </td>
               <td className="px-4 py-3">
-                <StatusBadge status={incident.status} />
+                <StatusLabel status={incident.status} className="text-sm" />
               </td>
               <td className="px-4 py-3">
                 <OwnerChip owner={incident.owner} />
