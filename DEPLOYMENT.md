@@ -22,19 +22,20 @@ same VPS as a separate Dokploy service. Two services total:
    - `POSTGRES_PASSWORD`
    - the internal Postgres host (the compose service name, usually `supabase-db`).
 
-## 2. Schema + seed
+## 2. Schema + seed — automatic
 
-From your machine, against the VPS database (temporarily expose 5432 or use an
-SSH tunnel `ssh -L 5432:localhost:5432 root@vps`):
+The container applies `supabase/migrations/*.sql` on startup
+(`scripts/migrate.mjs`, tracked in `public._app_migrations`, guarded by an
+advisory lock so concurrent replicas don't race). If the database already has
+the schema but no tracking table, existing migrations are baselined without
+re-running.
 
-```bash
-supabase db push --db-url "postgresql://postgres:<POSTGRES_PASSWORD>@localhost:5432/postgres"
-psql "postgresql://postgres:<POSTGRES_PASSWORD>@localhost:5432/postgres" -f supabase/seed.sql
-```
+When the incidents table is empty it also runs `supabase/seed.sql` (five demo
+users with password `password123`, 12 sample incidents). Set `SEED_ON_EMPTY=0`
+to disable seeding.
 
-`db push` applies everything in `supabase/migrations/` (tables, RLS, triggers,
-realtime publication). The seed is optional in production — it creates the five
-demo users (password `password123`) and 12 sample incidents.
+Locally the Supabase CLI stays the source of truth (`bun run db:reset`); the
+runtime migrator is only for deployed environments.
 
 ## 3. App service
 

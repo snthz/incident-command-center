@@ -29,7 +29,10 @@ RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/supabase/migrations ./supabase/migrations
+COPY --from=builder --chown=nextjs:nodejs /app/supabase/seed.sql ./supabase/seed.sql
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/migrate.mjs ./scripts/migrate.mjs
 USER nextjs
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node scripts/migrate.mjs && exec node server.js"]

@@ -30,15 +30,28 @@ values
    'authenticated', 'authenticated', 'gadi.orellana@icc.dev',
    crypt('password123', gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}', '{"name":"Gadi Orellana"}',
-   now(), now(), '', '', '', '');
+   now(), now(), '', '', '', '')
+on conflict (id) do nothing;
 
 insert into auth.identities
   (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 select
-  gen_random_uuid(), id, id,
-  jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true),
+  gen_random_uuid(), u.id, u.id,
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
   'email', now(), now(), now()
-from auth.users;
+from auth.users u
+where not exists (
+  select 1 from auth.identities i where i.user_id = u.id and i.provider = 'email'
+);
+
+insert into public.profiles (id, name, email, avatar_url)
+select
+  u.id,
+  coalesce(u.raw_user_meta_data ->> 'name', split_part(u.email, '@', 1)),
+  u.email,
+  u.raw_user_meta_data ->> 'avatar_url'
+from auth.users u
+on conflict (id) do nothing;
 
 -- Incidents
 insert into public.incidents (id, title, description, severity, status, owner_id, created_at, updated_at, resolved_at) values
