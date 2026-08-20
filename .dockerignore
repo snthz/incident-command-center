@@ -1,8 +1,9 @@
 node_modules
 .next
 .git
-.env*
-!.env.example
+.env.local
+.env.development
+.env.test
 files
 supabase/.temp
 supabase/.branches
