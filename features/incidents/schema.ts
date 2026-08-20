@@ -52,3 +52,9 @@ export const moveIncidentSchema = z.object({
   id: z.string().regex(uuidPattern),
   status: z.enum(IncidentStatus),
 });
+
+export const postUpdateSchema = z.object({
+  id: z.string().regex(uuidPattern),
+  incidentId: z.string().regex(uuidPattern),
+  message: z.string().trim().min(1).max(2000),
+});

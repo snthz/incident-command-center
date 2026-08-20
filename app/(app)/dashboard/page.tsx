@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { requireUser } from "@/lib/dal";
 import { IncidentBoard } from "@/features/incidents/board";
+import { DashboardRealtime } from "@/features/incidents/dashboard-realtime";
 import { IncidentFiltersBar } from "@/features/incidents/filters";
 import { IncidentListTable } from "@/features/incidents/list-table";
 import {
@@ -43,6 +44,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <div className="group flex flex-col gap-6">
+      <DashboardRealtime />
       <header className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold text-foreground">Incidents</h1>
         <p className="text-sm text-muted">

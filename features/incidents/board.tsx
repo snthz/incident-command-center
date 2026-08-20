@@ -61,7 +61,8 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="relative snap-x snap-mandatory overflow-x-auto pb-2 xl:overflow-visible xl:pb-0">
+        <div className="flex gap-3 xl:grid xl:grid-cols-4">
         {statusValues.map((status) => {
           const items = optimisticIncidents.filter(
             (incident) => incident.status === status,
@@ -88,7 +89,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
                 if (id) moveIncident(id, status);
               }}
               className={cn(
-                "flex min-h-56 flex-col gap-2 rounded-lg border bg-surface/50 p-2 transition-colors",
+                "flex min-h-56 w-72 shrink-0 snap-start flex-col gap-2 rounded-lg border bg-surface/50 p-2 transition-colors xl:w-auto",
                 dropTarget === status && dragId
                   ? "border-brand/60 bg-surface-2"
                   : "border-line",
@@ -128,6 +129,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
             </section>
           );
         })}
+        </div>
       </div>
     </div>
   );

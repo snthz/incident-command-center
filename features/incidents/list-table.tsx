@@ -16,7 +16,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-line">
+    <div className="relative overflow-x-auto rounded-lg border border-line">
       <table className="w-full min-w-180 border-collapse text-sm">
         <thead>
           <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">

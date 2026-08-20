@@ -44,7 +44,10 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
 
   return (
     <article className="flex flex-col gap-5">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+      <nav
+        aria-label="Breadcrumb"
+        className="sticky top-0 z-20 -mx-4 flex items-center gap-1.5 bg-background/90 px-4 py-3 text-sm backdrop-blur-sm"
+      >
         <Link href="/dashboard" className="text-muted hover:text-foreground">
           Incidents
         </Link>
@@ -73,7 +76,10 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
           </section>
         </div>
 
-        <aside aria-label="Incident details" className="flex h-fit flex-col gap-4">
+        <aside
+          aria-label="Incident details"
+          className="flex h-fit flex-col gap-4 lg:sticky lg:top-14"
+        >
           <div className="w-fit">
             <StatusSelect
               incidentId={incident.id}
