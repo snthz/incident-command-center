@@ -96,13 +96,13 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
               )}
             >
               <header className="flex items-center gap-2 px-1.5 py-1.5">
-                <StatusIcon status={status} />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
                   {statusLabels[status]}
                 </h3>
                 <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-muted">
                   {items.length}
                 </span>
+                {status === "resolved" ? <StatusIcon status={status} /> : null}
               </header>
               {items.length === 0 ? (
                 <p className="flex flex-1 items-center justify-center rounded-md border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
