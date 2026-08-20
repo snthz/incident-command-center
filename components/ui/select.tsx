@@ -3,11 +3,22 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
-export type SelectOption = { value: string; label: string };
+export type SelectOption = {
+  value: string;
+  label: string;
+  icon?: React.ReactNode;
+};
 
 const triggerSizes = {
   md: "gap-2 rounded-md px-3 py-1.5 text-sm",
   sm: "gap-1.5 rounded px-2 py-1 text-xs",
+};
+
+const triggerVariants = {
+  outline:
+    "border border-line bg-surface-2 text-foreground hover:border-neutral-600",
+  ghost:
+    "border border-transparent bg-transparent text-muted hover:bg-white/5 hover:text-foreground",
 };
 
 const optionSizes = {
@@ -21,6 +32,7 @@ type SelectProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   size?: keyof typeof triggerSizes;
+  variant?: keyof typeof triggerVariants;
   align?: "start" | "end";
   className?: string;
   id?: string;
@@ -34,6 +46,7 @@ export function Select({
   onChange,
   disabled,
   size = "md",
+  variant = "outline",
   align = "start",
   className,
   id,
@@ -183,12 +196,16 @@ export function Select({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onKeyDown}
         className={cn(
-          "flex items-center justify-between border border-line bg-surface-2 text-foreground transition-colors hover:border-neutral-600 disabled:cursor-not-allowed disabled:opacity-60",
+          "flex items-center justify-between transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+          triggerVariants[variant],
           triggerSizes[size],
           className,
         )}
       >
-        <span className="truncate">{selected?.label ?? ""}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          {selected?.icon}
+          <span className="truncate">{selected?.label ?? ""}</span>
+        </span>
         <svg
           aria-hidden
           viewBox="0 0 12 12"
@@ -237,7 +254,10 @@ export function Select({
                   : "text-neutral-300",
               )}
             >
-              <span className="truncate">{option.label}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {option.icon}
+                <span className="truncate">{option.label}</span>
+              </span>
               {option.value === value ? (
                 <svg
                   aria-hidden

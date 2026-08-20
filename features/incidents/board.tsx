@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
 import { updateIncidentStatus } from "./actions";
-import { SeverityBadge, StatusBadge } from "./badges";
+import { SeverityBadge, StatusIcon } from "./badges";
 import { OwnerChip } from "./owner-chip";
 import type { IncidentListItem } from "./queries";
 import { statusLabels, statusValues } from "./schema";
@@ -95,9 +95,14 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
                   : "border-line",
               )}
             >
-              <header className="flex items-center justify-between px-1.5 py-1">
-                <StatusBadge status={status} />
-                <span className="text-xs text-muted">{items.length}</span>
+              <header className="flex items-center gap-2 px-1.5 py-1.5">
+                <StatusIcon status={status} />
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  {statusLabels[status]}
+                </h3>
+                <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-muted">
+                  {items.length}
+                </span>
               </header>
               {items.length === 0 ? (
                 <p className="flex flex-1 items-center justify-center rounded-md border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
@@ -158,10 +163,18 @@ function BoardCard({
         dragging && "opacity-40",
       )}
     >
+      <Link
+        draggable={false}
+        href={`/incidents/${incident.id}`}
+        className="text-sm text-foreground hover:underline"
+      >
+        {incident.title}
+      </Link>
       <div className="flex items-center justify-between gap-2">
         <SeverityBadge severity={incident.severity} />
         <Select
           size="sm"
+          variant="ghost"
           align="end"
           aria-label={`Change status of ${incident.title}`}
           value={incident.status}
@@ -170,16 +183,10 @@ function BoardCard({
           options={statusValues.map((status) => ({
             value: status,
             label: statusLabels[status],
+            icon: <StatusIcon status={status} />,
           }))}
         />
       </div>
-      <Link
-        draggable={false}
-        href={`/incidents/${incident.id}`}
-        className="text-sm font-medium text-foreground hover:underline"
-      >
-        {incident.title}
-      </Link>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
         <OwnerChip owner={incident.owner} />
         <TimeAgo date={incident.updatedAt} className="text-xs text-muted" />

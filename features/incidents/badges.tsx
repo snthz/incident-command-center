@@ -87,6 +87,21 @@ const statusStyles: Record<IncidentStatus, { label: string; className: string; i
   },
 };
 
+export const statusTextColor: Record<IncidentStatus, string> = {
+  investigating: "text-rose-300",
+  identified: "text-amber-300",
+  monitoring: "text-sky-300",
+  resolved: "text-emerald-300",
+};
+
+export function StatusIcon({ status, className }: { status: IncidentStatus; className?: string }) {
+  return (
+    <span className={cn("inline-flex", statusTextColor[status], className)}>
+      {statusStyles[status].icon}
+    </span>
+  );
+}
+
 export function SeverityBadge({ severity, className }: { severity: IncidentSeverity; className?: string }) {
   const style = severityStyles[severity];
   return (
