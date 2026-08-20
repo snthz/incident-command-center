@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { SeverityBadge, StatusBadge } from "@/features/incidents/badges";
+import { uuidPattern } from "@/features/incidents/schema";
 
 export default async function IncidentDetailPage({ params }: PageProps<"/incidents/[id]">) {
   await requireUser();
   const { id } = await params;
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) notFound();
+  if (!uuidPattern.test(id)) notFound();
 
   const incident = await prisma.incident.findUnique({ where: { id } });
   if (!incident) notFound();

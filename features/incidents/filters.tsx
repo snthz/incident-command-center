@@ -4,17 +4,33 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select";
-import { severityValues, statusValues, type IncidentFilters } from "./schema";
+import {
+  severityLabels,
+  severityValues,
+  statusLabels,
+  statusValues,
+  type IncidentFilters,
+} from "./schema";
 
-function capitalize(value: string) {
-  return value[0].toUpperCase() + value.slice(1);
-}
-
-export function IncidentFiltersBar({ filters }: { filters: IncidentFilters }) {
+export function IncidentFiltersBar({
+  filters,
+  showStatus = true,
+}: {
+  filters: IncidentFilters;
+  showStatus?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+
+  function replaceParams(params: URLSearchParams) {
+    startTransition(() => {
+      router.replace(params.size ? `${pathname}?${params}` : pathname, {
+        scroll: false,
+      });
+    });
+  }
 
   function apply(key: "status" | "severity", value: string) {
     const params = new URLSearchParams(searchParams);
@@ -23,32 +39,37 @@ export function IncidentFiltersBar({ filters }: { filters: IncidentFilters }) {
     } else {
       params.delete(key);
     }
-    startTransition(() => {
-      router.replace(params.size ? `${pathname}?${params}` : pathname, {
-        scroll: false,
-      });
-    });
+    replaceParams(params);
   }
 
-  const hasFilters = Boolean(filters.status || filters.severity);
+  function clear() {
+    const params = new URLSearchParams(searchParams);
+    params.delete("status");
+    params.delete("severity");
+    replaceParams(params);
+  }
+
+  const hasFilters = Boolean((showStatus && filters.status) || filters.severity);
 
   return (
     <div
       data-pending={isPending ? "" : undefined}
       className="flex flex-wrap items-center gap-4"
     >
-      <SelectField
-        label="Status"
-        value={filters.status ?? ""}
-        onChange={(event) => apply("status", event.target.value)}
-      >
-        <option value="">All</option>
-        {statusValues.map((status) => (
-          <option key={status} value={status}>
-            {capitalize(status)}
-          </option>
-        ))}
-      </SelectField>
+      {showStatus ? (
+        <SelectField
+          label="Status"
+          value={filters.status ?? ""}
+          onChange={(event) => apply("status", event.target.value)}
+        >
+          <option value="">All</option>
+          {statusValues.map((status) => (
+            <option key={status} value={status}>
+              {statusLabels[status]}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
 
       <SelectField
         label="Severity"
@@ -58,7 +79,7 @@ export function IncidentFiltersBar({ filters }: { filters: IncidentFilters }) {
         <option value="">All</option>
         {severityValues.map((severity) => (
           <option key={severity} value={severity}>
-            {capitalize(severity)}
+            {severityLabels[severity]}
           </option>
         ))}
       </SelectField>
@@ -67,11 +88,7 @@ export function IncidentFiltersBar({ filters }: { filters: IncidentFilters }) {
         <Button
           variant="ghost"
           className="px-2 py-1 text-sm font-normal"
-          onClick={() => {
-            startTransition(() => {
-              router.replace(pathname, { scroll: false });
-            });
-          }}
+          onClick={clear}
         >
           Clear filters
         </Button>

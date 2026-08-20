@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSeverityStats } from "./queries";
-import { severityValues } from "./schema";
+import { severityValues, type DashboardView } from "./schema";
 
 const severityAccents: Record<string, string> = {
   critical: "text-red-300",
@@ -10,15 +10,16 @@ const severityAccents: Record<string, string> = {
   low: "text-sky-300",
 };
 
-export async function SeverityStats() {
+export async function SeverityStats({ view }: { view: DashboardView }) {
   const stats = await getSeverityStats();
+  const viewSuffix = view === "list" ? "&view=list" : "";
 
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {severityValues.map((severity) => (
         <li key={severity}>
           <Link
-            href={`/dashboard?severity=${severity}`}
+            href={`/dashboard?severity=${severity}${viewSuffix}`}
             className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-neutral-600"
           >
             <span className={`text-xs font-medium uppercase tracking-wide ${severityAccents[severity]}`}>
@@ -39,7 +40,7 @@ export function SeverityStatsSkeleton() {
   return (
     <div aria-busy className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {severityValues.map((severity) => (
-        <Skeleton key={severity} className="h-[102px]" />
+        <Skeleton key={severity} className="h-25.5" />
       ))}
     </div>
   );

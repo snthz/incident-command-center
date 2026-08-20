@@ -1,0 +1,203 @@
+"use client";
+
+import Link from "next/link";
+import { useOptimistic, useState, useTransition } from "react";
+import { TimeAgo } from "@/components/ui/time-ago";
+import { cn } from "@/lib/cn";
+import type { IncidentStatus } from "@/lib/generated/prisma/enums";
+import { updateIncidentStatus } from "./actions";
+import { SeverityBadge, StatusBadge } from "./badges";
+import { OwnerChip } from "./owner-chip";
+import type { IncidentListItem } from "./queries";
+import { statusLabels, statusValues } from "./schema";
+
+type Move = { id: string; status: IncidentStatus };
+
+export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) {
+  const [optimisticIncidents, applyMove] = useOptimistic(
+    incidents,
+    (current, move: Move) =>
+      current.map((incident) =>
+        incident.id === move.id ? { ...incident, status: move.status } : incident,
+      ),
+  );
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<IncidentStatus | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [, startTransition] = useTransition();
+
+  const pendingIds = new Set(
+    optimisticIncidents
+      .filter(
+        (incident) =>
+          incidents.find((base) => base.id === incident.id)?.status !==
+          incident.status,
+      )
+      .map((incident) => incident.id),
+  );
+
+  function moveIncident(id: string, status: IncidentStatus) {
+    const incident = optimisticIncidents.find((item) => item.id === id);
+    if (!incident || incident.status === status) return;
+    setError(null);
+    startTransition(async () => {
+      applyMove({ id, status });
+      const result = await updateIncidentStatus({ id, status });
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setAnnouncement(`"${incident.title}" moved to ${statusLabels[status]}.`);
+      }
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+        >
+          {error}
+        </p>
+      ) : null}
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {statusValues.map((status) => {
+          const items = optimisticIncidents.filter(
+            (incident) => incident.status === status,
+          );
+          return (
+            <section
+              key={status}
+              aria-label={`${statusLabels[status]} (${items.length})`}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDropTarget(status);
+              }}
+              onDragLeave={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                  setDropTarget(null);
+                }
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const id = event.dataTransfer.getData("text/plain");
+                setDropTarget(null);
+                setDragId(null);
+                if (id) moveIncident(id, status);
+              }}
+              className={cn(
+                "flex min-h-56 flex-col gap-2 rounded-lg border bg-surface/50 p-2 transition-colors",
+                dropTarget === status && dragId
+                  ? "border-brand/60 bg-surface-2"
+                  : "border-line",
+              )}
+            >
+              <header className="flex items-center justify-between px-1.5 py-1">
+                <StatusBadge status={status} />
+                <span className="text-xs text-muted">{items.length}</span>
+              </header>
+              {items.length === 0 ? (
+                <p className="flex flex-1 items-center justify-center rounded-md border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
+                  No incidents
+                </p>
+              ) : (
+                <ul className="flex flex-1 flex-col gap-2">
+                  {items.map((incident) => (
+                    <BoardCard
+                      key={incident.id}
+                      incident={incident}
+                      pending={pendingIds.has(incident.id)}
+                      dragging={dragId === incident.id}
+                      onDragStart={() => setDragId(incident.id)}
+                      onDragEnd={() => {
+                        setDragId(null);
+                        setDropTarget(null);
+                      }}
+                      onMove={moveIncident}
+                    />
+                  ))}
+                </ul>
+              )}
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BoardCard({
+  incident,
+  pending,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onMove,
+}: {
+  incident: IncidentListItem;
+  pending: boolean;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onMove: (id: string, status: IncidentStatus) => void;
+}) {
+  return (
+    <li
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData("text/plain", incident.id);
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      className={cn(
+        "flex cursor-grab flex-col gap-2 rounded-md border border-line bg-surface p-3 transition-opacity active:cursor-grabbing",
+        dragging && "opacity-40",
+        pending && "opacity-60",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <SeverityBadge severity={incident.severity} />
+        <label className="sr-only" htmlFor={`move-${incident.id}`}>
+          Change status of {incident.title}
+        </label>
+        <select
+          id={`move-${incident.id}`}
+          value={incident.status}
+          disabled={pending}
+          onChange={(event) =>
+            onMove(incident.id, event.target.value as IncidentStatus)
+          }
+          className="rounded border border-line bg-surface-2 px-1 py-0.5 text-[11px] text-muted"
+        >
+          {statusValues.map((status) => (
+            <option key={status} value={status}>
+              {statusLabels[status]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Link
+        draggable={false}
+        href={`/incidents/${incident.id}`}
+        className="text-sm font-medium text-foreground hover:underline"
+      >
+        {incident.title}
+      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+        <OwnerChip owner={incident.owner} />
+        <span className="flex items-center gap-1.5 text-xs text-muted">
+          {pending ? <span>Saving…</span> : null}
+          <TimeAgo date={incident.updatedAt} />
+        </span>
+      </div>
+    </li>
+  );
+}
