@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env*
+!.env.example
+files
+supabase/.temp
+supabase/.branches
+lib/generated
+coverage
+*.md
+!README.md
+.dockerignore
+Dockerfile

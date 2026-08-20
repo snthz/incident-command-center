@@ -7,19 +7,29 @@ insert into auth.users
    confirmation_token, recovery_token, email_change, email_change_token_new)
 values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111',
-   'authenticated', 'authenticated', 'ana@icc.dev',
+   'authenticated', 'authenticated', 'axl.santos@icc.dev',
    crypt('password123', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"Ana Torres"}',
+   '{"provider":"email","providers":["email"]}', '{"name":"Axl Santos"}',
    now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222',
-   'authenticated', 'authenticated', 'marco@icc.dev',
+   'authenticated', 'authenticated', 'mario.pon@icc.dev',
    crypt('password123', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"Marco Rivas"}',
+   '{"provider":"email","providers":["email"]}', '{"name":"Mario Pon"}',
    now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333',
-   'authenticated', 'authenticated', 'lucia@icc.dev',
+   'authenticated', 'authenticated', 'christian.rivera@icc.dev',
    crypt('password123', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"Lucía Mendez"}',
+   '{"provider":"email","providers":["email"]}', '{"name":"Christian Rivera"}',
+   now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444',
+   'authenticated', 'authenticated', 'eduard.chinchilla@icc.dev',
+   crypt('password123', gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"name":"Eduard Chinchilla"}',
+   now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '55555555-5555-5555-5555-555555555555',
+   'authenticated', 'authenticated', 'gadi.orellana@icc.dev',
+   crypt('password123', gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"name":"Gadi Orellana"}',
    now(), now(), '', '', '', '');
 
 insert into auth.identities
@@ -50,7 +60,7 @@ insert into public.incidents (id, title, description, severity, status, owner_id
   ('a0000000-0000-0000-0000-000000000004',
    'Suspicious login attempts from single ASN',
    'Security noticed a spike of credential-stuffing attempts against the admin panel. WAF rules under review.',
-   'medium', 'investigating', '11111111-1111-1111-1111-111111111111',
+   'medium', 'investigating', '44444444-4444-4444-4444-444444444444',
    now() - interval '5 hours', now() - interval '2 hours', null),
   ('a0000000-0000-0000-0000-000000000005',
    'Failed deployment: notifications service v2.14',
@@ -60,7 +70,7 @@ insert into public.incidents (id, title, description, severity, status, owner_id
   ('a0000000-0000-0000-0000-000000000006',
    'CDN cache hit ratio dropped to 60%',
    'A config push invalidated most edge caches. Origin is holding but costs are spiking.',
-   'low', 'monitoring', '33333333-3333-3333-3333-333333333333',
+   'low', 'monitoring', '55555555-5555-5555-5555-555555555555',
    now() - interval '2 days', now() - interval '6 hours', null),
   ('a0000000-0000-0000-0000-000000000007',
    'Stripe webhook delivery delays',
@@ -85,12 +95,12 @@ insert into public.incidents (id, title, description, severity, status, owner_id
   ('a0000000-0000-0000-0000-000000000011',
    'Background job queue backlog',
    'Email digest queue grew past 200k jobs after a worker deploy loop. Workers scaled out, backlog drained.',
-   'low', 'resolved', '11111111-1111-1111-1111-111111111111',
+   'low', 'resolved', '44444444-4444-4444-4444-444444444444',
    now() - interval '5 days', now() - interval '4 days 18 hours', now() - interval '4 days 18 hours'),
   ('a0000000-0000-0000-0000-000000000012',
    'Feature flag service timeout spikes',
    'SDK clients timing out on flag evaluation, falling back to defaults. Vendor incident confirmed.',
-   'medium', 'monitoring', '22222222-2222-2222-2222-222222222222',
+   'medium', 'monitoring', '55555555-5555-5555-5555-555555555555',
    now() - interval '10 hours', now() - interval '90 minutes', null);
 
 -- Activity history (trigger disabled so seeded updated_at timestamps survive)
@@ -110,18 +120,18 @@ insert into public.incident_updates (incident_id, author_id, message, created_at
   ('a0000000-0000-0000-0000-000000000003', '33333333-3333-3333-3333-333333333333', 'Snapshot restored. Serving stale-but-correct results while reindexing runs.', now() - interval '4 hours'),
   ('a0000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'Error rate back under 0.5%. Keeping in monitoring until reindex completes (~2h left).', now() - interval '1 hour'),
 
-  ('a0000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', '~40k failed logins from a single ASN in 30 min. No successful compromises detected so far.', now() - interval '5 hours'),
-  ('a0000000-0000-0000-0000-000000000004', '33333333-3333-3333-3333-333333333333', 'Rate limiting tightened on /admin/login. Reviewing WAF managed rules for the ASN block.', now() - interval '2 hours'),
+  ('a0000000-0000-0000-0000-000000000004', '44444444-4444-4444-4444-444444444444', '~40k failed logins from a single ASN in 30 min. No successful compromises detected so far.', now() - interval '5 hours'),
+  ('a0000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Rate limiting tightened on /admin/login. Reviewing WAF managed rules for the ASN block.', now() - interval '2 hours'),
 
   ('a0000000-0000-0000-0000-000000000005', '22222222-2222-2222-2222-222222222222', 'Canary failed on migration 0042 (lock timeout on notifications table). Rollout halted automatically.', now() - interval '1 day'),
-  ('a0000000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', 'Push notifications degraded for canary cohort (~5%). Email/SMS unaffected.', now() - interval '20 hours'),
+  ('a0000000-0000-0000-0000-000000000005', '44444444-4444-4444-4444-444444444444', 'Push notifications degraded for canary cohort (~5%). Email/SMS unaffected.', now() - interval '20 hours'),
   ('a0000000-0000-0000-0000-000000000005', '22222222-2222-2222-2222-222222222222', 'Migration rewritten to batch updates. Scheduling retry during low-traffic window tonight.', now() - interval '3 hours'),
 
-  ('a0000000-0000-0000-0000-000000000006', '33333333-3333-3333-3333-333333333333', 'Cache hit ratio dropped from 94% to 60% after the header normalization config push.', now() - interval '2 days'),
+  ('a0000000-0000-0000-0000-000000000006', '55555555-5555-5555-5555-555555555555', 'Cache hit ratio dropped from 94% to 60% after the header normalization config push.', now() - interval '2 days'),
   ('a0000000-0000-0000-0000-000000000006', '33333333-3333-3333-3333-333333333333', 'Config reverted. Hit ratio recovering slowly as caches warm up. Origin autoscaled to absorb load.', now() - interval '6 hours'),
 
   ('a0000000-0000-0000-0000-000000000007', '22222222-2222-2222-2222-222222222222', 'Stripe status page confirms webhook delays. Our reconciliation job is picking up missed events.', now() - interval '80 minutes'),
-  ('a0000000-0000-0000-0000-000000000007', '11111111-1111-1111-1111-111111111111', 'No lost payments detected. Orders reconcile within ~10 minutes. Monitoring provider status.', now() - interval '30 minutes'),
+  ('a0000000-0000-0000-0000-000000000007', '55555555-5555-5555-5555-555555555555', 'No lost payments detected. Orders reconcile within ~10 minutes. Monitoring provider status.', now() - interval '30 minutes'),
 
   ('a0000000-0000-0000-0000-000000000008', '11111111-1111-1111-1111-111111111111', 'SMART alerts on primary db-eu-1. Initiating planned failover to replica.', now() - interval '2 days'),
   ('a0000000-0000-0000-0000-000000000008', '11111111-1111-1111-1111-111111111111', 'Failover complete. 40s of write unavailability. All replicas healthy and in sync.', now() - interval '1 day 21 hours'),
@@ -135,11 +145,11 @@ insert into public.incident_updates (incident_id, author_id, message, created_at
   ('a0000000-0000-0000-0000-000000000010', '33333333-3333-3333-3333-333333333333', 'Manual renewal issued and deployed. Root cause: renewal automation pointed at a dead DNS zone.', now() - interval '3 days 20 hours'),
   ('a0000000-0000-0000-0000-000000000010', '11111111-1111-1111-1111-111111111111', 'Automation fixed and verified against staging. Resolving.', now() - interval '3 days 12 hours'),
 
-  ('a0000000-0000-0000-0000-000000000011', '11111111-1111-1111-1111-111111111111', 'Digest queue at 200k+ jobs after worker deploy loop. Consumers scaled 3x.', now() - interval '5 days'),
-  ('a0000000-0000-0000-0000-000000000011', '11111111-1111-1111-1111-111111111111', 'Backlog drained. Deploy pipeline fixed to prevent restart loops. Resolving.', now() - interval '4 days 18 hours'),
+  ('a0000000-0000-0000-0000-000000000011', '44444444-4444-4444-4444-444444444444', 'Digest queue at 200k+ jobs after worker deploy loop. Consumers scaled 3x.', now() - interval '5 days'),
+  ('a0000000-0000-0000-0000-000000000011', '44444444-4444-4444-4444-444444444444', 'Backlog drained. Deploy pipeline fixed to prevent restart loops. Resolving.', now() - interval '4 days 18 hours'),
 
-  ('a0000000-0000-0000-0000-000000000012', '22222222-2222-2222-2222-222222222222', 'Flag evaluations timing out at ~8%. SDKs falling back to default values as designed.', now() - interval '10 hours'),
+  ('a0000000-0000-0000-0000-000000000012', '55555555-5555-5555-5555-555555555555', 'Flag evaluations timing out at ~8%. SDKs falling back to default values as designed.', now() - interval '10 hours'),
   ('a0000000-0000-0000-0000-000000000012', '33333333-3333-3333-3333-333333333333', 'Vendor confirmed incident on their side. Increased SDK cache TTL to reduce evaluation calls.', now() - interval '5 hours'),
-  ('a0000000-0000-0000-0000-000000000012', '22222222-2222-2222-2222-222222222222', 'Vendor reports recovery. Timeout rate at 0.3% and dropping. Monitoring for another hour.', now() - interval '90 minutes');
+  ('a0000000-0000-0000-0000-000000000012', '55555555-5555-5555-5555-555555555555', 'Vendor reports recovery. Timeout rate at 0.3% and dropping. Monitoring for another hour.', now() - interval '90 minutes');
 
 alter table public.incident_updates enable trigger on_update_posted;

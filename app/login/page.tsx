@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
         <footer className="px-6 py-6 lg:px-8">
           <p className="text-xs text-muted">
-            Demo users: ana@icc.dev, marco@icc.dev, lucia@icc.dev — password{" "}
+            Demo users: axl.santos@icc.dev, mario.pon@icc.dev, christian.rivera@icc.dev — password{" "}
             <code className="font-mono text-neutral-400">password123</code>
           </p>
         </footer>
