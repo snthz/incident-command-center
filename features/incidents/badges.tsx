@@ -105,7 +105,7 @@ export function StatusIcon({ status, className }: { status: IncidentStatus; clas
 export function StatusLabel({ status, className }: { status: IncidentStatus; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-muted", className)}>
-      <StatusIcon status={status} />
+      {status === "resolved" ? <StatusIcon status={status} /> : null}
       {statusStyles[status].label}
     </span>
   );
