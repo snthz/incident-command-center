@@ -68,8 +68,8 @@ runtime migrator is only for deployed environments.
   over WSS through Kong).
 - Drag a card between columns; reload — the change persisted (verifies
   `DATABASE_URL`).
-- `NEXT_PUBLIC_SUPABASE_URL` must be the public HTTPS URL, never an internal
-  host: the browser uses it for auth cookies and the realtime socket.
+- `SUPABASE_URL` must be the public HTTPS URL, never an internal host: the
+  browser uses it for auth cookies and the realtime socket.
 
 ## Local image smoke test
 
