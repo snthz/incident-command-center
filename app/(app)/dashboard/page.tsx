@@ -5,8 +5,10 @@ import { IncidentBoard } from "@/features/incidents/board";
 import { DashboardRealtime } from "@/features/incidents/dashboard-realtime";
 import { IncidentFiltersBar } from "@/features/incidents/filters";
 import { IncidentListTable } from "@/features/incidents/list-table";
+import { NewIncidentSheet } from "@/features/incidents/new-incident-sheet";
 import {
   getActiveIncidents,
+  getProfiles,
   getRecentlyResolved,
 } from "@/features/incidents/queries";
 import {
@@ -36,21 +38,31 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
     effectiveFilters.status === undefined ||
     effectiveFilters.status === "resolved";
 
-  const [active, resolved] = await Promise.all([
-    includeActive ? getActiveIncidents(effectiveFilters) : Promise.resolve([]),
-    includeResolved ? getRecentlyResolved(effectiveFilters) : Promise.resolve([]),
+  const order = view === "board" ? "board" : "recent";
+
+  const [active, resolved, profiles] = await Promise.all([
+    includeActive
+      ? getActiveIncidents(effectiveFilters, order)
+      : Promise.resolve([]),
+    includeResolved
+      ? getRecentlyResolved(effectiveFilters, order)
+      : Promise.resolve([]),
+    getProfiles(),
   ]);
   const incidents = [...active, ...resolved];
 
   return (
     <div className="group flex flex-col gap-6">
       <DashboardRealtime />
-      <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">Incidents</h1>
-        <p className="text-sm text-muted">
-          Live view of what the team is responding to right now. Resolved shows
-          the last 7 days.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-foreground">Incidents</h1>
+          <p className="text-sm text-muted">
+            Live view of what the team is responding to right now. Resolved shows
+            the last 7 days.
+          </p>
+        </div>
+        <NewIncidentSheet profiles={profiles} />
       </header>
 
       <Suspense fallback={<SeverityStatsSkeleton />}>

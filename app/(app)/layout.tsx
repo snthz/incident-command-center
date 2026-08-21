@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ToastProvider } from "@/components/ui/toaster";
 import { UserMenu } from "@/features/auth/user-menu";
 import { Logo } from "@/features/branding/logo";
+import { NotificationsBell } from "@/features/notifications/bell";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,9 +20,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Link href="/dashboard" aria-label="Incident Command Center">
             <Logo size={28} />
           </Link>
-          <Suspense fallback={<div aria-hidden className="size-8 animate-pulse rounded-full bg-white/5" />}>
-            <UserMenu />
-          </Suspense>
+          <div className="flex items-center gap-2">
+            <Suspense fallback={<div aria-hidden className="size-8 animate-pulse rounded-full bg-white/5" />}>
+              <NotificationsBell />
+            </Suspense>
+            <Suspense fallback={<div aria-hidden className="size-8 animate-pulse rounded-full bg-white/5" />}>
+              <UserMenu />
+            </Suspense>
+          </div>
         </nav>
       </header>
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">

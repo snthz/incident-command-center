@@ -7,8 +7,8 @@ import { requireUser } from "@/lib/dal";
 import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
 import { SeverityBadge } from "@/features/incidents/badges";
 import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
-import { OwnerChip } from "@/features/incidents/owner-chip";
-import { getIncident } from "@/features/incidents/queries";
+import { OwnerSelect } from "@/features/incidents/owner-select";
+import { getIncident, getProfiles } from "@/features/incidents/queries";
 import { incidentKeyPattern } from "@/features/incidents/schema";
 import { StatusSelect } from "@/features/incidents/status-select";
 
@@ -39,7 +39,7 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
   const { key } = await params;
   if (!incidentKeyPattern.test(key)) notFound();
 
-  const incident = await getIncident(key);
+  const [incident, profiles] = await Promise.all([getIncident(key), getProfiles()]);
   if (!incident) notFound();
 
   return (
@@ -94,7 +94,14 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
             </h2>
             <dl className="flex flex-col divide-y divide-line">
               <DetailRow label="Assignee">
-                <OwnerChip owner={incident.owner} />
+                <div className="-ml-2">
+                  <OwnerSelect
+                    incidentId={incident.id}
+                    incidentKey={incident.key}
+                    ownerId={incident.ownerId}
+                    profiles={profiles}
+                  />
+                </div>
               </DetailRow>
               <DetailRow label="Severity">
                 <SeverityBadge severity={incident.severity} />

@@ -7,6 +7,7 @@ export type SelectOption = {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  description?: string;
 };
 
 const triggerSizes = {
@@ -254,9 +255,18 @@ export function Select({
                   : "text-neutral-300",
               )}
             >
-              <span className="flex min-w-0 items-center gap-1.5">
+              <span className={cn("flex min-w-0 items-center", option.description ? "gap-2.5" : "gap-1.5")}>
                 {option.icon}
-                <span className="truncate">{option.label}</span>
+                {option.description ? (
+                  <span className="flex min-w-0 flex-col py-0.5">
+                    <span className="truncate">{option.label}</span>
+                    <span className="truncate text-xs text-muted">
+                      {option.description}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="truncate">{option.label}</span>
+                )}
               </span>
               {option.value === value ? (
                 <svg

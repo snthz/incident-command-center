@@ -58,3 +58,37 @@ export const postUpdateSchema = z.object({
   incidentId: z.string().regex(uuidPattern),
   message: z.string().trim().min(1).max(2000),
 });
+
+export const createIncidentSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(8, "Give it a descriptive title (at least 8 characters).")
+    .max(150, "Keep the title under 150 characters."),
+  description: z
+    .string()
+    .trim()
+    .min(20, "Describe the impact and what is failing (at least 20 characters).")
+    .max(5000, "Keep the description under 5,000 characters."),
+  severity: z.enum(IncidentSeverity, "Pick a severity."),
+  ownerId: z
+    .union([z.string().regex(uuidPattern), z.literal("")])
+    .transform((value) => (value === "" ? null : value)),
+});
+
+export const assignIncidentSchema = z.object({
+  id: z.string().regex(uuidPattern),
+  ownerId: z
+    .union([z.string().regex(uuidPattern), z.literal("")])
+    .transform((value) => (value === "" ? null : value)),
+});
+
+// Drop target expressed as the two cards the incident lands between.
+// Neighbour ids instead of a full ordered list: the board renders filtered,
+// so a full list would overwrite the position of cards hidden by a filter.
+export const reorderIncidentSchema = z.object({
+  id: z.string().regex(uuidPattern),
+  status: z.enum(IncidentStatus),
+  beforeId: z.string().regex(uuidPattern).nullish(),
+  afterId: z.string().regex(uuidPattern).nullish(),
+});

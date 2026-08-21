@@ -7,10 +7,12 @@ import type {
 const badgeBase =
   "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium";
 
+const severityBase = "inline-flex items-center gap-1.5 text-xs font-medium";
+
 const severityStyles: Record<IncidentSeverity, { label: string; className: string; icon: React.ReactNode }> = {
   critical: {
     label: "Critical",
-    className: "border-red-500/30 bg-red-500/10 text-red-300",
+    className: "text-red-300",
     icon: (
       <svg aria-hidden viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 6.5 6 2.5l4 4M2 9.5l4-4 4 4" />
@@ -19,7 +21,7 @@ const severityStyles: Record<IncidentSeverity, { label: string; className: strin
   },
   high: {
     label: "High",
-    className: "border-orange-500/30 bg-orange-500/10 text-orange-300",
+    className: "text-orange-300",
     icon: (
       <svg aria-hidden viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 8 6 4l4 4" />
@@ -28,7 +30,7 @@ const severityStyles: Record<IncidentSeverity, { label: string; className: strin
   },
   medium: {
     label: "Medium",
-    className: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    className: "text-amber-300",
     icon: (
       <svg aria-hidden viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
         <path d="M2.5 4.5h7M2.5 7.5h7" />
@@ -37,7 +39,7 @@ const severityStyles: Record<IncidentSeverity, { label: string; className: strin
   },
   low: {
     label: "Low",
-    className: "border-sky-500/30 bg-sky-500/10 text-sky-300",
+    className: "text-sky-300",
     icon: (
       <svg aria-hidden viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 4 6 8l4-4" />
@@ -114,7 +116,7 @@ export function StatusLabel({ status, className }: { status: IncidentStatus; cla
 export function SeverityBadge({ severity, className }: { severity: IncidentSeverity; className?: string }) {
   const style = severityStyles[severity];
   return (
-    <span className={cn(badgeBase, style.className, className)}>
+    <span className={cn(severityBase, style.className, className)}>
       {style.icon}
       {style.label}
     </span>

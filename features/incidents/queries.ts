@@ -26,7 +26,16 @@ export type IncidentListItem = Awaited<
   ReturnType<typeof getActiveIncidents>
 >[number];
 
-export async function getActiveIncidents(filters: IncidentFilters) {
+/**
+ * "board" honours the manual drag-and-drop order; "recent" is the activity
+ * order the flat list view reads by (its own column says "Last updated").
+ */
+export type IncidentOrder = "board" | "recent";
+
+export async function getActiveIncidents(
+  filters: IncidentFilters,
+  order: IncidentOrder = "recent",
+) {
   return prisma.incident.findMany({
     where: {
       status: filters.status ?? { not: "resolved" },
@@ -34,11 +43,17 @@ export async function getActiveIncidents(filters: IncidentFilters) {
       ...searchClause(filters.q),
     },
     include: incidentListInclude,
-    orderBy: { updatedAt: "desc" },
+    orderBy:
+      order === "board"
+        ? [{ position: "asc" }, { updatedAt: "desc" }]
+        : [{ updatedAt: "desc" }],
   });
 }
 
-export async function getRecentlyResolved(filters: IncidentFilters) {
+export async function getRecentlyResolved(
+  filters: IncidentFilters,
+  order: IncidentOrder = "recent",
+) {
   const windowStart = new Date();
   windowStart.setDate(windowStart.getDate() - RESOLVED_WINDOW_DAYS);
 
@@ -50,9 +65,21 @@ export async function getRecentlyResolved(filters: IncidentFilters) {
       ...searchClause(filters.q),
     },
     include: incidentListInclude,
-    orderBy: { resolvedAt: "desc" },
+    orderBy:
+      order === "board"
+        ? [{ position: "asc" }, { resolvedAt: "desc" }]
+        : [{ resolvedAt: "desc" }],
   });
 }
+
+export const getProfiles = cache(async () => {
+  return prisma.profile.findMany({
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+});
+
+export type ProfileOption = Awaited<ReturnType<typeof getProfiles>>[number];
 
 export const getIncident = cache(async (key: string) => {
   return prisma.incident.findUnique({

@@ -7,25 +7,93 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
-import { updateIncidentStatus } from "./actions";
+import { reorderIncident, updateIncidentStatus } from "./actions";
 import { SeverityBadge, StatusIcon } from "./badges";
 import type { IncidentListItem } from "./queries";
 import { statusLabels, statusValues } from "./schema";
 
-type Move = { id: string; status: IncidentStatus };
+type DropSlot = {
+  status: IncidentStatus;
+  beforeId: string | null;
+  afterId: string | null;
+};
+
+type Move = DropSlot & { id: string };
+
+/**
+ * Mirrors the insertion rule the server applies, so the optimistic list and the
+ * revalidated one agree. Used both for the drag preview and the optimistic move.
+ */
+function reorder(list: IncidentListItem[], move: Move) {
+  const moving = list.find((item) => item.id === move.id);
+  if (!moving) return list;
+
+  const rest = list.filter((item) => item.id !== move.id);
+  let index = -1;
+
+  if (move.beforeId) {
+    const found = rest.findIndex((item) => item.id === move.beforeId);
+    if (found >= 0) index = found + 1;
+  }
+  if (index < 0 && move.afterId) {
+    const found = rest.findIndex((item) => item.id === move.afterId);
+    if (found >= 0) index = found;
+  }
+  if (index < 0) {
+    // No usable anchor: land at the bottom of the target column.
+    index = rest.reduce(
+      (last, item, at) => (item.status === move.status ? at + 1 : last),
+      0,
+    );
+  }
+
+  rest.splice(index, 0, { ...moving, status: move.status });
+  return rest;
+}
+
+function isNoop(before: IncidentListItem[], after: IncidentListItem[]) {
+  return after.every(
+    (item, at) =>
+      before[at]?.id === item.id && before[at]?.status === item.status,
+  );
+}
+
+/**
+ * Reads the drop slot off the rendered column: the first card whose midpoint
+ * sits below the pointer becomes `afterId`, the previous one `beforeId`.
+ * Measuring the DOM rather than indices keeps the gaps between cards, the
+ * header and the empty space below the list all pointing at a sane slot.
+ */
+function slotAt(section: HTMLElement, clientY: number, draggingId: string) {
+  let beforeId: string | null = null;
+
+  for (const card of Array.from(
+    section.querySelectorAll<HTMLElement>("[data-incident-id]"),
+  )) {
+    const id = card.dataset.incidentId;
+    if (!id || id === draggingId) continue;
+
+    const rect = card.getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) return { beforeId, afterId: id };
+    beforeId = id;
+  }
+
+  return { beforeId, afterId: null };
+}
 
 export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) {
-  const [optimisticIncidents, applyMove] = useOptimistic(
-    incidents,
-    (current, move: Move) =>
-      current.map((incident) =>
-        incident.id === move.id ? { ...incident, status: move.status } : incident,
-      ),
-  );
+  const [optimisticIncidents, applyMove] = useOptimistic(incidents, reorder);
   const [dragId, setDragId] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<IncidentStatus | null>(null);
+  const [slot, setSlot] = useState<DropSlot | null>(null);
   const [, startTransition] = useTransition();
   const toast = useToast();
+
+  // While dragging, the card is rendered in the slot it would land in, so the
+  // board itself is the drop indicator.
+  const preview =
+    dragId && slot
+      ? reorder(optimisticIncidents, { id: dragId, ...slot })
+      : optimisticIncidents;
 
   const pendingIds = new Set(
     optimisticIncidents
@@ -37,15 +105,65 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
       .map((incident) => incident.id),
   );
 
-  function moveIncident(id: string, status: IncidentStatus) {
+  function endDrag() {
+    setDragId(null);
+    setSlot(null);
+  }
+
+  function commitMove(id: string, target: DropSlot) {
+    const incident = optimisticIncidents.find((item) => item.id === id);
+    if (!incident) return;
+
+    const move: Move = { id, ...target };
+    if (isNoop(optimisticIncidents, reorder(optimisticIncidents, move))) return;
+
+    const changesColumn = incident.status !== target.status;
+    const toastId = toast.push(
+      "loading",
+      changesColumn
+        ? `Moving "${incident.title}" to ${statusLabels[target.status]}…`
+        : `Reordering "${incident.title}"…`,
+    );
+
+    startTransition(async () => {
+      applyMove(move);
+      const result = await reorderIncident({
+        id,
+        status: target.status,
+        beforeId: target.beforeId,
+        afterId: target.afterId,
+      });
+      if (result.error) {
+        toast.update(toastId, "error", result.error);
+      } else {
+        toast.update(
+          toastId,
+          "success",
+          changesColumn
+            ? `"${incident.title}" moved to ${statusLabels[target.status]}`
+            : `"${incident.title}" reordered`,
+        );
+      }
+    });
+  }
+
+  function changeStatus(id: string, status: IncidentStatus) {
     const incident = optimisticIncidents.find((item) => item.id === id);
     if (!incident || incident.status === status) return;
+
+    // The select has no drop point, so mirror the server: bottom of the column.
+    const lastInColumn = optimisticIncidents.reduce<string | null>(
+      (last, item) =>
+        item.status === status && item.id !== id ? item.id : last,
+      null,
+    );
     const toastId = toast.push(
       "loading",
       `Moving "${incident.title}" to ${statusLabels[status]}…`,
     );
+
     startTransition(async () => {
-      applyMove({ id, status });
+      applyMove({ id, status, beforeId: lastInColumn, afterId: null });
       const result = await updateIncidentStatus({ id, status });
       if (result.error) {
         toast.update(toastId, "error", result.error);
@@ -64,9 +182,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
       <div className="relative snap-x snap-mandatory overflow-x-auto pb-2 xl:overflow-visible xl:pb-0">
         <div className="flex gap-3 xl:grid xl:grid-cols-4">
         {statusValues.map((status) => {
-          const items = optimisticIncidents.filter(
-            (incident) => incident.status === status,
-          );
+          const items = preview.filter((incident) => incident.status === status);
           return (
             <section
               key={status}
@@ -74,23 +190,32 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
               onDragOver={(event) => {
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
-                setDropTarget(status);
+                if (!dragId) return;
+                const next = slotAt(event.currentTarget, event.clientY, dragId);
+                setSlot((current) =>
+                  current &&
+                  current.status === status &&
+                  current.beforeId === next.beforeId &&
+                  current.afterId === next.afterId
+                    ? current
+                    : { status, ...next },
+                );
               }}
               onDragLeave={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-                  setDropTarget(null);
+                  setSlot(null);
                 }
               }}
               onDrop={(event) => {
                 event.preventDefault();
-                const id = event.dataTransfer.getData("text/plain");
-                setDropTarget(null);
-                setDragId(null);
-                if (id) moveIncident(id, status);
+                const id = event.dataTransfer.getData("text/plain") || dragId;
+                const target = slot;
+                endDrag();
+                if (id && target) commitMove(id, target);
               }}
               className={cn(
                 "flex min-h-56 w-72 shrink-0 snap-start flex-col gap-2 rounded-lg border bg-surface/50 p-2 transition-colors xl:w-auto",
-                dropTarget === status && dragId
+                slot?.status === status && dragId
                   ? "border-brand/60 bg-surface-2"
                   : "border-line",
               )}
@@ -117,11 +242,8 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
                       pending={pendingIds.has(incident.id)}
                       dragging={dragId === incident.id}
                       onDragStart={() => setDragId(incident.id)}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setDropTarget(null);
-                      }}
-                      onMove={moveIncident}
+                      onDragEnd={endDrag}
+                      onStatusChange={changeStatus}
                     />
                   ))}
                 </ul>
@@ -141,18 +263,19 @@ function BoardCard({
   dragging,
   onDragStart,
   onDragEnd,
-  onMove,
+  onStatusChange,
 }: {
   incident: IncidentListItem;
   pending: boolean;
   dragging: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onMove: (id: string, status: IncidentStatus) => void;
+  onStatusChange: (id: string, status: IncidentStatus) => void;
 }) {
   return (
     <li
       draggable
+      data-incident-id={incident.id}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/plain", incident.id);
         event.dataTransfer.effectAllowed = "move";
@@ -160,8 +283,10 @@ function BoardCard({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex cursor-grab flex-col gap-2 rounded-md border border-line bg-surface p-3 active:cursor-grabbing",
-        dragging && "opacity-40",
+        "flex cursor-grab flex-col gap-2 rounded-md border bg-surface p-3 active:cursor-grabbing",
+        dragging
+          ? "border-dashed border-brand/60 opacity-50"
+          : "border-line",
       )}
     >
       <Link
@@ -180,7 +305,7 @@ function BoardCard({
           aria-label={`Change status of ${incident.title}`}
           value={incident.status}
           disabled={pending}
-          onChange={(value) => onMove(incident.id, value as IncidentStatus)}
+          onChange={(value) => onStatusChange(incident.id, value as IncidentStatus)}
           options={statusValues.map((status) => ({
             value: status,
             label: statusLabels[status],

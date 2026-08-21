@@ -166,3 +166,27 @@ insert into public.incident_updates (incident_id, author_id, message, created_at
   ('a0000000-0000-0000-0000-000000000012', '55555555-5555-5555-5555-555555555555', 'Vendor reports recovery. Timeout rate at 0.3% and dropping. Monitoring for another hour.', now() - interval '90 minutes');
 
 alter table public.incident_updates enable trigger on_update_posted;
+
+-- Board ordering: most recent activity first inside each column
+update public.incidents i
+set position = n.rn
+from (
+  select
+    id,
+    row_number() over (
+      partition by status
+      order by coalesce(resolved_at, updated_at) desc
+    ) as rn
+  from public.incidents
+) n
+where i.id = n.id;
+
+insert into public.notifications (recipient_id, actor_id, incident_id, incident_key, incident_title, type, read_at, created_at)
+select
+  n.recipient_id, n.actor_id, i.id, i.key, i.title, n.type, n.read_at, n.created_at
+from (values
+  ('11111111-1111-1111-1111-111111111111'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, 'update_posted', null::timestamptz, now() - interval '20 minutes'),
+  ('11111111-1111-1111-1111-111111111111'::uuid, '33333333-3333-3333-3333-333333333333'::uuid, 'a0000000-0000-0000-0000-000000000008'::uuid, 'status_changed', null::timestamptz, now() - interval '2 hours'),
+  ('11111111-1111-1111-1111-111111111111'::uuid, '44444444-4444-4444-4444-444444444444'::uuid, 'a0000000-0000-0000-0000-000000000004'::uuid, 'assigned', now() - interval '1 day', now() - interval '1 day 2 hours')
+) as n(recipient_id, actor_id, incident_id, type, read_at, created_at)
+join public.incidents i on i.id = n.incident_id;
