@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { DemoUsers } from "@/features/auth/demo-users";
 import { LoginForm } from "@/features/auth/login-form";
 import { Logo } from "@/features/branding/logo";
 
@@ -28,10 +29,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </div>
 
         <footer className="px-6 py-6 lg:px-8">
-          <p className="text-xs text-muted">
-            Demo users: axl.santos@icc.dev, mario.pon@icc.dev, christian.rivera@icc.dev — password{" "}
-            <code className="font-mono text-neutral-400">password123</code>
-          </p>
+          <div className="mx-auto w-full max-w-sm">
+            <DemoUsers />
+          </div>
         </footer>
       </div>
 
