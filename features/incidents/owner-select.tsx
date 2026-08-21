@@ -12,11 +12,13 @@ export function OwnerSelect({
   incidentKey,
   ownerId,
   profiles,
+  align = "start",
 }: {
   incidentId: string;
   incidentKey: string;
   ownerId: string | null;
   profiles: ProfileOption[];
+  align?: "start" | "end";
 }) {
   const [optimisticOwner, setOptimisticOwner] = useOptimistic(ownerId ?? "");
   const [isPending, startTransition] = useTransition();
@@ -48,6 +50,7 @@ export function OwnerSelect({
     <Select
       aria-label="Assignee"
       variant="ghost"
+      align={align}
       value={optimisticOwner}
       disabled={isPending}
       onChange={change}

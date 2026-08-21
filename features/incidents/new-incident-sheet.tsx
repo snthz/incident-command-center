@@ -82,7 +82,7 @@ export function NewIncidentSheet({ profiles }: { profiles: ProfileOption[] }) {
         onClick={(event) => {
           if (event.target === dialogRef.current) setOpen(false);
         }}
-        className="sheet m-0 ml-auto h-dvh max-h-none w-full max-w-md border-l border-line bg-surface p-0 text-foreground shadow-2xl shadow-black/60 backdrop:bg-black/60"
+        className="sheet fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-full max-w-md border-l border-line bg-surface p-0 text-foreground shadow-2xl shadow-black/60 backdrop:bg-black/60"
       >
         <form action={formAction} noValidate className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
@@ -101,7 +101,7 @@ export function NewIncidentSheet({ profiles }: { profiles: ProfileOption[] }) {
             </button>
           </div>
 
-          <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
+          <div className="scroll-slim flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
             <TextField
               label="Title"
               name="title"

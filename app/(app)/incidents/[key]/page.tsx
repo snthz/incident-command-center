@@ -100,6 +100,7 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
                     incidentKey={incident.key}
                     ownerId={incident.ownerId}
                     profiles={profiles}
+                    align="end"
                   />
                 </div>
               </DetailRow>

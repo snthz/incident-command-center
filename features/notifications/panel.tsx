@@ -51,7 +51,6 @@ export function NotificationsPanel({
   const [liveItems, setLiveItems] = useState<NotificationItem[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [allReadAt, setAllReadAt] = useState<number | null>(null);
-  const [liveUnread, setLiveUnread] = useState(0);
   const [announcement, setAnnouncement] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -87,8 +86,18 @@ export function NotificationsPanel({
         setOpen(false);
       }
     };
+    const onDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onDocumentKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onDocumentKeyDown);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -149,7 +158,6 @@ export function NotificationsPanel({
                 ? current
                 : [item, ...current],
             );
-            setLiveUnread((count) => count + 1);
             const summary = `${item.actorName ?? "Someone"} ${verbs[item.type]} ${item.incidentKey}`;
             setAnnouncement(summary);
             toast.push("success", summary);
@@ -163,14 +171,6 @@ export function NotificationsPanel({
       if (client && channel) client.removeChannel(channel);
     };
   }, [userId, toast]);
-
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Escape" && open) {
-      event.preventDefault();
-      setOpen(false);
-      buttonRef.current?.focus();
-    }
-  };
 
   const openItem = (item: NotificationItem) => {
     setOpen(false);
@@ -186,7 +186,7 @@ export function NotificationsPanel({
   };
 
   return (
-    <div ref={containerRef} className="relative" onKeyDown={onKeyDown}>
+    <div ref={containerRef} className="relative">
       <span aria-live="polite" className="sr-only">
         {announcement}
       </span>
@@ -243,7 +243,7 @@ export function NotificationsPanel({
               You&apos;re all caught up.
             </p>
           ) : (
-            <ul className="max-h-96 overflow-y-auto">
+            <ul className="scroll-slim max-h-96 overflow-y-auto">
               {items.map((item) => (
                 <li key={item.id} className="border-b border-line last:border-b-0">
                   <Link

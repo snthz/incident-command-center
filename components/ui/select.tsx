@@ -231,7 +231,7 @@ export function Select({
           aria-labelledby={labelId}
           aria-label={labelId ? undefined : ariaLabel}
           className={cn(
-            "absolute z-30 mt-1 max-h-60 w-max min-w-full overflow-auto rounded-md border border-line bg-surface-2 py-1 shadow-xl",
+            "scroll-slim absolute top-full z-30 mt-1.5 max-h-60 w-max min-w-full overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface-2 p-1 shadow-xl",
             align === "end" ? "right-0" : "left-0",
           )}
         >
@@ -248,7 +248,7 @@ export function Select({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => commit(index)}
               className={cn(
-                "flex cursor-pointer items-center justify-between gap-3",
+                "flex cursor-pointer items-center justify-between gap-3 rounded-md",
                 optionSizes[size],
                 index === highlighted
                   ? "bg-white/5 text-foreground"
