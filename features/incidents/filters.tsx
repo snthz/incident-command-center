@@ -2,9 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SelectField } from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 import {
   severityLabels,
   severityValues,
@@ -85,7 +84,7 @@ export function IncidentFiltersBar({
   return (
     <div
       data-pending={isPending ? "" : undefined}
-      className="flex flex-wrap items-center gap-4"
+      className="flex flex-wrap items-center gap-1.5"
     >
       <div className="relative">
         <svg
@@ -104,20 +103,21 @@ export function IncidentFiltersBar({
           ref={searchRef}
           type="search"
           aria-label="Search incidents"
-          placeholder="Search incidents…"
+          placeholder="Search…"
           value={query}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="w-56 py-1.5 pl-8 text-sm"
+          className="w-36 border-transparent bg-transparent py-1.5 pl-8 text-sm transition-[width] focus:w-52 focus:border-line lg:focus:w-64"
         />
       </div>
 
       {showStatus ? (
-        <SelectField
-          label="Status"
+        <Select
+          aria-label="Filter by status"
+          variant="ghost"
           value={filters.status ?? ""}
           onChange={(value) => apply("status", value)}
           options={[
-            { value: "", label: "All" },
+            { value: "", label: "Status" },
             ...statusValues.map((status) => ({
               value: status,
               label: statusLabels[status],
@@ -126,12 +126,13 @@ export function IncidentFiltersBar({
         />
       ) : null}
 
-      <SelectField
-        label="Severity"
+      <Select
+        aria-label="Filter by severity"
+        variant="ghost"
         value={filters.severity ?? ""}
         onChange={(value) => apply("severity", value)}
         options={[
-          { value: "", label: "All" },
+          { value: "", label: "Severity" },
           ...severityValues.map((severity) => ({
             value: severity,
             label: severityLabels[severity],
@@ -140,13 +141,16 @@ export function IncidentFiltersBar({
       />
 
       {hasFilters ? (
-        <Button
-          variant="ghost"
-          className="px-2 py-1 text-sm font-normal"
+        <button
+          type="button"
+          aria-label="Clear filters"
           onClick={clear}
+          className="flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-white/5 hover:text-neutral-200"
         >
-          Clear filters
-        </Button>
+          <svg aria-hidden viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+            <path d="m2.5 2.5 7 7m0-7-7 7" />
+          </svg>
+        </button>
       ) : null}
 
       <span role="status" className="sr-only">

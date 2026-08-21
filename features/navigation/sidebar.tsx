@@ -25,13 +25,16 @@ export async function SidebarContent() {
 
   return (
     <>
-      <div className="flex h-14 items-center gap-2.5 border-b border-line px-4">
+      <div className="flex h-14 items-center gap-2.5 px-4">
         <Link href="/dashboard" aria-label="Incident Command Center" className="shrink-0">
           <Logo size={26} withText={false} />
         </Link>
         <span className="truncate text-sm font-semibold text-foreground">
           {organization.name}
         </span>
+        <svg aria-hidden viewBox="0 0 12 12" className="ml-auto size-3 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m3.5 4.5 2.5-2.5 2.5 2.5M3.5 7.5 6 10l2.5-2.5" />
+        </svg>
       </div>
 
       <SidebarNav
@@ -42,7 +45,7 @@ export async function SidebarContent() {
         }))}
       />
 
-      <div className="flex items-center gap-3 border-t border-line px-4 py-3.5">
+      <div className="flex items-center gap-3 px-4 py-3.5">
         <span
           aria-hidden
           className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-neutral-300 ring-1 ring-line"

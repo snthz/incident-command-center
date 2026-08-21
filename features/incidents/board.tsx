@@ -214,7 +214,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
                 if (id && target) commitMove(id, target);
               }}
               className={cn(
-                "flex min-h-56 w-72 shrink-0 snap-start flex-col gap-2 rounded-lg border bg-surface/50 p-2 transition-colors xl:w-auto",
+                "flex min-h-56 w-72 shrink-0 snap-start flex-col gap-2 rounded-lg border bg-background/40 p-2 transition-colors xl:w-auto",
                 slot?.status === status && dragId
                   ? "border-brand/60 bg-surface-2"
                   : "border-line",
@@ -283,7 +283,7 @@ function BoardCard({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex cursor-grab flex-col gap-2 rounded-md border bg-surface p-3 active:cursor-grabbing",
+        "flex cursor-grab flex-col gap-2 rounded-md border bg-surface-2 p-3 active:cursor-grabbing",
         dragging
           ? "border-dashed border-brand/60 opacity-50"
           : "border-line",

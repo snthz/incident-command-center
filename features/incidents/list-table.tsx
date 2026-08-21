@@ -19,7 +19,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
     <div className="relative overflow-x-auto rounded-lg border border-line">
       <table className="w-full min-w-180 border-collapse text-sm">
         <thead>
-          <tr className="border-b border-line bg-surface text-left text-xs uppercase tracking-wide text-muted">
+          <tr className="border-b border-line bg-surface-2/50 text-left text-xs uppercase tracking-wide text-muted">
             <th scope="col" className="px-4 py-2.5 font-medium">Key</th>
             <th scope="col" className="px-4 py-2.5 font-medium">Incident</th>
             <th scope="col" className="px-4 py-2.5 font-medium">Severity</th>
@@ -33,7 +33,7 @@ export function IncidentListTable({ incidents }: { incidents: IncidentListItem[]
           {incidents.map((incident) => (
             <tr
               key={incident.id}
-              className="border-b border-line last:border-b-0 hover:bg-surface"
+              className="border-b border-line last:border-b-0 hover:bg-white/[0.03]"
             >
               <td className="px-4 py-3">
                 <Link

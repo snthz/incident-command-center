@@ -30,7 +30,7 @@ export default async function TeamPage() {
         {members.map((member) => (
           <li
             key={member.profileId}
-            className="flex items-center gap-4 rounded-lg border border-line bg-surface p-4"
+            className="flex items-center gap-4 rounded-lg border border-line bg-surface-2/40 p-4"
           >
             <span
               aria-hidden

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { HistoryNav } from "@/features/navigation/history-nav";
 import { IncidentBoard } from "./board";
 import { DashboardRealtime } from "./dashboard-realtime";
 import { IncidentFiltersBar } from "./filters";
@@ -60,38 +61,44 @@ export async function IncidentsView({
   return (
     <div className="group flex flex-col gap-6">
       <DashboardRealtime />
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="flex items-center gap-2.5 text-xl font-semibold text-foreground">
+      <header className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex h-8 items-center gap-2 text-sm text-muted">
+            <HistoryNav />
             {project ? (
-              <span
-                aria-hidden
-                className="size-2.5 rounded-full"
-                style={{ backgroundColor: project.color }}
-              />
-            ) : null}
+              <>
+                <span>Projects</span>
+                <span aria-hidden className="text-neutral-600">/</span>
+                <span className="text-neutral-300">{project.name}</span>
+              </>
+            ) : (
+              <span className="text-neutral-300">Overview</span>
+            )}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground" title={description}>
             {title}
           </h1>
-          <p className="text-sm text-muted">{description}</p>
         </div>
-        <NewIncidentSheet
-          profiles={profiles}
-          projects={projects}
-          defaultProjectId={project?.id}
-        />
+
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line">
+          <ViewToggle view={view} filters={filters} basePath={basePath} />
+          <div className="flex flex-wrap items-center gap-2 pb-1.5">
+            <IncidentFiltersBar
+              filters={effectiveFilters}
+              showStatus={view === "list"}
+            />
+            <NewIncidentSheet
+              profiles={profiles}
+              projects={projects}
+              defaultProjectId={project?.id}
+            />
+          </div>
+        </div>
       </header>
 
       <Suspense fallback={<SeverityStatsSkeleton />}>
         <SeverityStats view={view} basePath={basePath} projectId={project?.id} />
       </Suspense>
-
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <IncidentFiltersBar
-          filters={effectiveFilters}
-          showStatus={view === "list"}
-        />
-        <ViewToggle view={view} filters={filters} basePath={basePath} />
-      </div>
 
       <div className="transition-opacity group-has-data-pending:opacity-60">
         {view === "board" ? (

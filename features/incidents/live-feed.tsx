@@ -332,7 +332,7 @@ export function LiveFeed({
               ref={openerRef}
               type="button"
               onClick={() => setComposerOpen(true)}
-              className="flex-1 rounded-md border border-line bg-surface px-3 py-2.5 text-left text-sm text-neutral-600 transition-colors hover:border-neutral-600"
+              className="flex-1 rounded-md border border-line bg-surface-2/40 px-3 py-2.5 text-left text-sm text-neutral-600 transition-colors hover:border-neutral-600"
             >
               Add an update…
             </button>

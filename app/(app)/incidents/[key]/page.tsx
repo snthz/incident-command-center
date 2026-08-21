@@ -46,7 +46,7 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
     <article className="flex flex-col gap-5">
       <nav
         aria-label="Breadcrumb"
-        className="sticky top-0 z-20 -mx-4 flex items-center gap-1.5 bg-background/90 px-4 py-3 text-sm backdrop-blur-sm"
+        className="sticky top-0 z-20 -mx-4 flex items-center gap-1.5 bg-surface/95 px-4 py-3 text-sm backdrop-blur-sm"
       >
         <Link
           href={`/projects/${incident.project.slug}`}

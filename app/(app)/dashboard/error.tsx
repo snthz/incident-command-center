@@ -15,7 +15,7 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-line bg-surface-2/40 px-6 py-12 text-center">
       <h2 className="text-base font-semibold text-foreground">
         We couldn&apos;t load the incidents
       </h2>

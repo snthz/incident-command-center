@@ -17,7 +17,7 @@ const listIcon = (
 
 const options: Array<{ value: DashboardView; label: string; icon: React.ReactNode }> = [
   { value: "board", label: "Board", icon: boardIcon },
-  { value: "list", label: "List", icon: listIcon },
+  { value: "list", label: "Table", icon: listIcon },
 ];
 
 export function ViewToggle({
@@ -42,17 +42,17 @@ export function ViewToggle({
   }
 
   return (
-    <div role="group" aria-label="View mode" className="inline-flex rounded-md border border-line p-0.5">
+    <div role="group" aria-label="View mode" className="flex items-center gap-5">
       {options.map((option) => (
         <Link
           key={option.value}
           href={hrefFor(option.value)}
           aria-current={view === option.value ? "page" : undefined}
           className={cn(
-            "flex items-center gap-1.5 rounded px-2.5 py-1 text-sm transition-colors",
+            "-mb-px flex items-center gap-1.5 border-b-2 pb-2.5 pt-1 text-sm transition-colors",
             view === option.value
-              ? "bg-surface-2 text-foreground"
-              : "text-muted hover:text-foreground",
+              ? "border-foreground font-medium text-foreground"
+              : "border-transparent text-muted hover:text-neutral-200",
           )}
         >
           {option.icon}

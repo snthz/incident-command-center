@@ -28,7 +28,7 @@ export async function SeverityStats({
         <li key={severity}>
           <Link
             href={`${basePath}?severity=${severity}${viewSuffix}`}
-            className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-neutral-600"
+            className="flex flex-col gap-1 rounded-lg border border-line bg-surface-2/40 p-4 transition-colors hover:border-neutral-600"
           >
             <span className={`text-xs font-medium uppercase tracking-wide ${severityAccents[severity]}`}>
               {severity}
