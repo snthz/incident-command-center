@@ -8,8 +8,22 @@ import { TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toaster";
 import { createIncident, type CreateIncidentState } from "./actions";
 import { assigneeOptions } from "./assignee-options";
-import type { ProfileOption } from "./queries";
+import type { ProfileOption, ProjectItem } from "./queries";
 import { severityLabels, severityValues } from "./schema";
+
+function projectOptions(projects: ProjectItem[]) {
+  return projects.map((project) => ({
+    value: project.id,
+    label: project.name,
+    icon: (
+      <span
+        aria-hidden
+        className="size-2 shrink-0 rounded-full"
+        style={{ backgroundColor: project.color }}
+      />
+    ),
+  }));
+}
 
 const initialState: CreateIncidentState = {};
 
@@ -32,10 +46,20 @@ function SheetField({
   );
 }
 
-export function NewIncidentSheet({ profiles }: { profiles: ProfileOption[] }) {
+export function NewIncidentSheet({
+  profiles,
+  projects,
+  defaultProjectId,
+}: {
+  profiles: ProfileOption[];
+  projects: ProjectItem[];
+  defaultProjectId?: string;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(createIncident, initialState);
+  const initialProjectId = defaultProjectId ?? projects[0]?.id ?? "";
+  const [projectId, setProjectId] = useState(initialProjectId);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [severity, setSeverity] = useState("medium");
@@ -56,6 +80,7 @@ export function NewIncidentSheet({ profiles }: { profiles: ProfileOption[] }) {
     if (state.createdKey && state.createdKey !== lastCreatedRef.current) {
       lastCreatedRef.current = state.createdKey;
       toast.push("success", `${state.createdKey} created`);
+      setProjectId(initialProjectId);
       setTitle("");
       setDescription("");
       setSeverity("medium");
@@ -102,6 +127,18 @@ export function NewIncidentSheet({ profiles }: { profiles: ProfileOption[] }) {
           </div>
 
           <div className="scroll-slim flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
+            <input type="hidden" name="projectId" value={projectId} />
+            <SheetField label="Project" id={`${baseId}-project`}>
+              <Select
+                id={`${baseId}-project`}
+                labelId={`${baseId}-project-label`}
+                className="w-full"
+                options={projectOptions(projects)}
+                value={projectId}
+                onChange={setProjectId}
+              />
+            </SheetField>
+
             <TextField
               label="Title"
               name="title"

@@ -10,8 +10,16 @@ const severityAccents: Record<string, string> = {
   low: "text-sky-300",
 };
 
-export async function SeverityStats({ view }: { view: DashboardView }) {
-  const stats = await getSeverityStats();
+export async function SeverityStats({
+  view,
+  basePath,
+  projectId,
+}: {
+  view: DashboardView;
+  basePath: string;
+  projectId?: string;
+}) {
+  const stats = await getSeverityStats(projectId);
   const viewSuffix = view === "list" ? "&view=list" : "";
 
   return (
@@ -19,7 +27,7 @@ export async function SeverityStats({ view }: { view: DashboardView }) {
       {severityValues.map((severity) => (
         <li key={severity}>
           <Link
-            href={`/dashboard?severity=${severity}${viewSuffix}`}
+            href={`${basePath}?severity=${severity}${viewSuffix}`}
             className="flex flex-col gap-1 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-neutral-600"
           >
             <span className={`text-xs font-medium uppercase tracking-wide ${severityAccents[severity]}`}>

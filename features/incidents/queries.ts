@@ -35,11 +35,13 @@ export type IncidentOrder = "board" | "recent";
 export async function getActiveIncidents(
   filters: IncidentFilters,
   order: IncidentOrder = "recent",
+  projectId?: string,
 ) {
   return prisma.incident.findMany({
     where: {
       status: filters.status ?? { not: "resolved" },
       severity: filters.severity,
+      projectId,
       ...searchClause(filters.q),
     },
     include: incidentListInclude,
@@ -53,6 +55,7 @@ export async function getActiveIncidents(
 export async function getRecentlyResolved(
   filters: IncidentFilters,
   order: IncidentOrder = "recent",
+  projectId?: string,
 ) {
   const windowStart = new Date();
   windowStart.setDate(windowStart.getDate() - RESOLVED_WINDOW_DAYS);
@@ -62,6 +65,7 @@ export async function getRecentlyResolved(
       status: "resolved",
       resolvedAt: { gte: windowStart },
       severity: filters.severity,
+      projectId,
       ...searchClause(filters.q),
     },
     include: incidentListInclude,
@@ -84,9 +88,46 @@ export type ProfileOption = Awaited<ReturnType<typeof getProfiles>>[number];
 export const getIncident = cache(async (key: string) => {
   return prisma.incident.findUnique({
     where: { key: key.toUpperCase() },
-    include: { owner: true },
+    include: { owner: true, project: true },
   });
 });
+
+export const getOrganization = cache(async () => {
+  return prisma.organization.findFirstOrThrow();
+});
+
+export const getOrgProjects = cache(async () => {
+  return prisma.project.findMany({
+    orderBy: { createdAt: "asc" },
+  });
+});
+
+export type ProjectItem = Awaited<ReturnType<typeof getOrgProjects>>[number];
+
+export const getProject = cache(async (slug: string) => {
+  return prisma.project.findFirst({
+    where: { slug: slug.toLowerCase() },
+  });
+});
+
+export const getTeam = cache(async () => {
+  return prisma.organizationMember.findMany({
+    include: {
+      profile: {
+        include: {
+          _count: {
+            select: {
+              ownedIncidents: { where: { status: { not: "resolved" } } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { profile: { name: "asc" } },
+  });
+});
+
+export type TeamMember = Awaited<ReturnType<typeof getTeam>>[number];
 
 export type IncidentDetail = NonNullable<Awaited<ReturnType<typeof getIncident>>>;
 
@@ -104,12 +145,12 @@ export type IncidentUpdateItem = Awaited<
   ReturnType<typeof getIncidentUpdates>
 >[number];
 
-export async function getSeverityStats() {
+export async function getSeverityStats(projectId?: string) {
   await new Promise((resolve) => setTimeout(resolve, STATS_STREAM_DELAY_MS));
 
   const groups = await prisma.incident.groupBy({
     by: ["severity"],
-    where: { status: { not: "resolved" } },
+    where: { status: { not: "resolved" }, projectId },
     _count: { _all: true },
   });
 

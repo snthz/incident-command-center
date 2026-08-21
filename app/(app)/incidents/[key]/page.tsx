@@ -48,8 +48,16 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
         aria-label="Breadcrumb"
         className="sticky top-0 z-20 -mx-4 flex items-center gap-1.5 bg-background/90 px-4 py-3 text-sm backdrop-blur-sm"
       >
-        <Link href="/dashboard" className="text-muted hover:text-foreground">
-          Incidents
+        <Link
+          href={`/projects/${incident.project.slug}`}
+          className="flex items-center gap-1.5 text-muted hover:text-foreground"
+        >
+          <span
+            aria-hidden
+            className="size-2 rounded-full"
+            style={{ backgroundColor: incident.project.color }}
+          />
+          {incident.project.name}
         </Link>
         <span aria-hidden className="text-neutral-600">/</span>
         <span className="font-mono text-xs text-muted">{incident.key}</span>

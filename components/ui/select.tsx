@@ -35,6 +35,9 @@ type SelectProps = {
   size?: keyof typeof triggerSizes;
   variant?: keyof typeof triggerVariants;
   align?: "start" | "end";
+  /** Side the list opens toward; use "top" when the trigger sits near the
+   *  bottom of its container. */
+  placement?: "bottom" | "top";
   className?: string;
   id?: string;
   labelId?: string;
@@ -49,6 +52,7 @@ export function Select({
   size = "md",
   variant = "outline",
   align = "start",
+  placement = "bottom",
   className,
   id,
   labelId,
@@ -231,7 +235,8 @@ export function Select({
           aria-labelledby={labelId}
           aria-label={labelId ? undefined : ariaLabel}
           className={cn(
-            "scroll-slim absolute top-full z-30 mt-1.5 max-h-60 w-max min-w-full overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface-2 p-1 shadow-xl",
+            "scroll-slim absolute z-30 max-h-60 w-max min-w-full overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface-2 p-1 shadow-xl",
+            placement === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
             align === "end" ? "right-0" : "left-0",
           )}
         >

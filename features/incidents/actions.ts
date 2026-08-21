@@ -23,6 +23,7 @@ type IncidentStatus = DropTarget["status"];
 
 function revalidateBoard() {
   revalidatePath("/dashboard");
+  revalidatePath("/projects/[slug]", "page");
   revalidatePath("/incidents/[key]", "page");
 }
 
@@ -282,6 +283,7 @@ export async function createIncident(
   }
 
   const parsed = createIncidentSchema.safeParse({
+    projectId: formData.get("projectId"),
     title: formData.get("title"),
     description: formData.get("description"),
     severity: formData.get("severity"),
@@ -310,6 +312,7 @@ export async function createIncident(
       });
       return tx.incident.create({
         data: {
+          projectId: parsed.data.projectId,
           title: parsed.data.title,
           description: parsed.data.description,
           severity: parsed.data.severity,

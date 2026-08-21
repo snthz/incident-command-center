@@ -19,7 +19,7 @@ export const statusLabels = Object.fromEntries(
 export const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const incidentKeyPattern = /^ICC-\d{1,6}$/i;
+export const incidentKeyPattern = /^[a-z]{2,10}-\d{1,6}$/i;
 
 export const incidentFiltersSchema = z.object({
   status: z.enum(IncidentStatus).optional().catch(undefined),
@@ -60,6 +60,7 @@ export const postUpdateSchema = z.object({
 });
 
 export const createIncidentSchema = z.object({
+  projectId: z.string().regex(uuidPattern, "Pick a project."),
   title: z
     .string()
     .trim()

@@ -23,9 +23,11 @@ const options: Array<{ value: DashboardView; label: string; icon: React.ReactNod
 export function ViewToggle({
   view,
   filters,
+  basePath,
 }: {
   view: DashboardView;
   filters: IncidentFilters;
+  basePath: string;
 }) {
   function hrefFor(target: DashboardView) {
     const params = new URLSearchParams();
@@ -36,7 +38,7 @@ export function ViewToggle({
       params.set("view", "list");
     }
     const query = params.toString();
-    return query ? `/dashboard?${query}` : "/dashboard";
+    return query ? `${basePath}?${query}` : basePath;
   }
 
   return (

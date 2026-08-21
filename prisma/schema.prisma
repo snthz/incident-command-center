@@ -25,6 +25,49 @@ enum IncidentStatus {
   @@map("incident_status")
 }
 
+model Organization {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  members  OrganizationMember[]
+  projects Project[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  organizationId String   @map("organization_id") @db.Uuid
+  profileId      String   @map("profile_id") @db.Uuid
+  role           String   @default("member")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  profile      Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, profileId])
+  @@map("organization_members")
+}
+
+model Project {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  name           String
+  slug           String
+  keyPrefix      String   @map("key_prefix")
+  color          String   @default("#898989")
+  nextNumber     Int      @default(0) @map("next_number")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incidents    Incident[]
+
+  @@unique([organizationId, slug])
+  @@unique([organizationId, keyPrefix])
+  @@map("projects")
+}
+
 model Profile {
   id        String   @id @db.Uuid
   name      String
@@ -34,15 +77,18 @@ model Profile {
 
   ownedIncidents        Incident[]
   updates               IncidentUpdate[]
-  notificationsReceived Notification[]   @relation("NotificationRecipient")
-  notificationsSent     Notification[]   @relation("NotificationActor")
+  notificationsReceived Notification[]       @relation("NotificationRecipient")
+  notificationsSent     Notification[]       @relation("NotificationActor")
+  memberships           OrganizationMember[]
 
   @@map("profiles")
 }
 
 model Incident {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key         String           @unique @default(dbgenerated("('ICC-'::text || nextval('incident_key_seq'::regclass))"))
+  key         String           @unique @default(dbgenerated())
+  number      Int              @default(dbgenerated())
+  projectId   String           @map("project_id") @db.Uuid
   title       String
   description String
   severity    IncidentSeverity
@@ -54,8 +100,11 @@ model Incident {
   position    Float            @default(0)
 
   owner         Profile?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   updates       IncidentUpdate[]
   notifications Notification[]
+
+  @@unique([projectId, number])
 
   @@index([status])
   @@index([severity])
