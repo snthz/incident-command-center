@@ -8,12 +8,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
-    DATABASE_URL=$DATABASE_URL \
+ENV DATABASE_URL=$DATABASE_URL \
     NEXT_TELEMETRY_DISABLED=1
 
 RUN node_modules/.bin/prisma generate && node_modules/.bin/next build

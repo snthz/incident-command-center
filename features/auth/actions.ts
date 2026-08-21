@@ -40,8 +40,10 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    // Never surface raw backend errors
-    return { error: "Invalid email or password." };
+    if (error.status === 400) {
+      return { error: "Invalid email or password." };
+    }
+    return { error: "Could not reach the authentication service. Try again in a moment." };
   }
 
   redirect(safeRedirect(formData.get("redirectTo")));

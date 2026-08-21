@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getPublicEnv } from "@/lib/public-env";
 
 const PUBLIC_PATHS = ["/login", "/about-severities"];
 
@@ -8,10 +9,8 @@ const PUBLIC_PATHS = ["/login", "/about-severities"];
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();

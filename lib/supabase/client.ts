@@ -1,10 +1,17 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+declare global {
+  interface Window {
+    __ENV?: { supabaseUrl: string; supabaseAnonKey: string };
+  }
+}
+
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const config = window.__ENV;
+  if (!config?.supabaseUrl || !config?.supabaseAnonKey) {
+    throw new Error("Missing Supabase runtime config (window.__ENV)");
+  }
+  return createBrowserClient(config.supabaseUrl, config.supabaseAnonKey);
 }
 
 export async function createRealtimeClient() {

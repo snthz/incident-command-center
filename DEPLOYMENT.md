@@ -39,27 +39,27 @@ runtime migrator is only for deployed environments.
 
 ## 3. App service
 
-1. Dokploy → **Create Service → Application**, source = this Git repository,
-   build type = **Dockerfile**.
-2. **Build args** (baked into the client bundle at build time — rebuild if they change):
-
-   | Arg | Value |
-   |---|---|
-   | `NEXT_PUBLIC_SUPABASE_URL` | `https://supabase.yourdomain.com` |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the anon/publishable key |
-
-3. **Environment** (runtime):
+1. Dokploy → **Create Service → Application**, source = **Docker** image
+   `ghcr.io/<owner>/incident-command-center:latest` (built by the GitHub
+   Actions workflow), or the Git repository with build type **Dockerfile**.
+2. **Environment** (all runtime — no build args, changing them only needs a
+   restart; the server passes the public pair to the browser via
+   `window.__ENV`):
 
    | Var | Value |
    |---|---|
+   | `SUPABASE_URL` | `https://supabase.yourdomain.com` (public Kong URL) |
+   | `SUPABASE_ANON_KEY` | the anon/publishable key |
    | `DATABASE_URL` | `postgresql://postgres:<POSTGRES_PASSWORD>@supabase-db:5432/postgres` |
 
-   Use the internal Docker host for Postgres. If the app and Supabase live in
-   different Dokploy projects, attach both to a shared Docker network first
-   (Dokploy → Advanced → Network), or fall back to the VPS IP with 5432
-   firewalled to localhost.
+   Use an internal Docker host for Postgres. The Supabase template keeps its
+   database on the compose-private network; bridge it once with
+   `docker network connect --alias supabase-db dokploy-network <db-container>`
+   (re-run if the Supabase compose is ever redeployed), or add
+   `dokploy-network` to the `db` service in the compose file.
 
-4. Assign the app domain (e.g. `icc.yourdomain.com`) with HTTPS and deploy.
+3. Assign the app domain (e.g. `icc.yourdomain.com`) with HTTPS (container
+   port 3000) and deploy.
 
 ## 4. Post-deploy checklist
 
@@ -74,12 +74,11 @@ runtime migrator is only for deployed environments.
 ## Local image smoke test
 
 ```bash
-docker build \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL=http://host.docker.internal:54321 \
-  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=<local publishable key> \
-  -t icc-app .
+docker build -t icc-app .
 
 docker run --rm -p 3002:3000 \
+  -e SUPABASE_URL=http://host.docker.internal:54321 \
+  -e SUPABASE_ANON_KEY=<local publishable key> \
   -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:54322/postgres \
   icc-app
 ```

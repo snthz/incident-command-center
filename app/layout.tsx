@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getPublicEnv } from "@/lib/public-env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,12 +25,18 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const publicEnv = getPublicEnv();
+  const envScript = `window.__ENV=${JSON.stringify(publicEnv).replace(/</g, "\\u003c")}`;
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: envScript }} />
+        {children}
+      </body>
     </html>
   );
 }
