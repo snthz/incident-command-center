@@ -63,9 +63,13 @@ try {
       await client.query("select count(*)::int as count from public.incidents")
     ).rows[0].count;
     if (count === 0) {
-      const seed = await readFile(SEED_FILE, "utf8");
-      await client.query(seed);
-      console.log("migrate: seeded empty database");
+      try {
+        const seed = await readFile(SEED_FILE, "utf8");
+        await client.query(seed);
+        console.log("migrate: seeded empty database");
+      } catch (error) {
+        console.warn(`migrate: seed skipped (${error.message})`);
+      }
     }
   }
 } finally {
