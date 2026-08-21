@@ -16,15 +16,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           aria-label="Main"
           className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4"
         >
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" aria-label="Incident Command Center">
-              <Logo size={28} />
-            </Link>
-            <Link href="/about-severities" className="text-sm text-muted hover:text-neutral-200">
-              Severity guide
-            </Link>
-          </div>
-          <Suspense fallback={<div aria-hidden className="h-8 w-28 animate-pulse rounded-md bg-white/5" />}>
+          <Link href="/dashboard" aria-label="Incident Command Center">
+            <Logo size={28} />
+          </Link>
+          <Suspense fallback={<div aria-hidden className="size-8 animate-pulse rounded-full bg-white/5" />}>
             <UserMenu />
           </Suspense>
         </nav>
@@ -32,6 +27,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         {children}
       </main>
+      <footer className="border-t border-line">
+        <div className="mx-auto flex h-12 w-full max-w-6xl items-center justify-between gap-4 px-4 text-xs text-muted">
+          <span>Incident Command Center</span>
+          <Link href="/about-severities" className="hover:text-neutral-200">
+            Severity guide
+          </Link>
+        </div>
+      </footer>
     </div>
     </ToastProvider>
   );

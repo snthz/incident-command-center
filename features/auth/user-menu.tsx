@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
 import { getUser } from "@/lib/dal";
 import { signOut } from "./actions";
+import { UserMenuDropdown } from "./user-menu-dropdown";
 
 export async function UserMenu() {
   const user = await getUser();
@@ -10,15 +10,10 @@ export async function UserMenu() {
     (user.user_metadata?.name as string | undefined) ?? user.email ?? "User";
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="hidden text-sm text-muted sm:inline" title={user.email ?? undefined}>
-        {name}
-      </span>
-      <form action={signOut}>
-        <Button type="submit" variant="secondary" className="py-1.5 font-normal">
-          Sign out
-        </Button>
-      </form>
-    </div>
+    <UserMenuDropdown
+      name={name}
+      email={user.email ?? undefined}
+      signOutAction={signOut}
+    />
   );
 }

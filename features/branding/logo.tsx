@@ -1,7 +1,5 @@
 import Image from "next/image";
 
-// Stacked lockup mirroring public/icons/icc-logotipo-*.svg: isotipo, hairline
-// rule, then the wordmark on two lines so the full name stays compact.
 export function Logo({ size = 30 }: { size?: number }) {
   return (
     <span className="flex items-center gap-3">
