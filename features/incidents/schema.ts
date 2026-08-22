@@ -75,6 +75,14 @@ export const createIncidentSchema = z.object({
   ownerId: z
     .union([z.string().regex(uuidPattern), z.literal("")])
     .transform((value) => (value === "" ? null : value)),
+  dueDate: z
+    .union([
+      z.literal(""),
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid due date."),
+    ])
+    .transform((value) =>
+      value === "" ? null : new Date(`${value}T12:00:00Z`),
+    ),
 });
 
 export const editIncidentSchema = z
@@ -94,6 +102,18 @@ export const editIncidentSchema = z
       .optional(),
   })
   .refine((data) => data.title !== undefined || data.description !== undefined);
+
+export const setDueDateSchema = z.object({
+  id: z.string().regex(uuidPattern),
+  dueDate: z
+    .union([
+      z.literal(""),
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid due date."),
+    ])
+    .transform((value) =>
+      value === "" ? null : new Date(`${value}T12:00:00Z`),
+    ),
+});
 
 export const watchIncidentSchema = z.object({
   incidentId: z.string().regex(uuidPattern),

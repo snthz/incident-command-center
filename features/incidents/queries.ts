@@ -152,6 +152,15 @@ export type IncidentUpdateItem = Awaited<
   ReturnType<typeof getIncidentUpdates>
 >[number];
 
+export async function getIncidentEvents(incidentId: string) {
+  return prisma.incidentEvent.findMany({
+    where: { incidentId },
+    include: { actor: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+}
+
 export async function getSeverityStats(projectId?: string) {
   await new Promise((resolve) => setTimeout(resolve, STATS_STREAM_DELAY_MS));
 

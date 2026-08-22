@@ -58,6 +58,34 @@ export async function notifyWatchers(input: {
   } catch {}
 }
 
+export type IncidentEventType =
+  | "created"
+  | "status_changed"
+  | "assignee_changed"
+  | "due_date_changed"
+  | "title_edited"
+  | "description_edited";
+
+export async function logEvent(input: {
+  incidentId: string;
+  actorId: string;
+  type: IncidentEventType;
+  fromValue?: string | null;
+  toValue?: string | null;
+}) {
+  try {
+    await prisma.incidentEvent.create({
+      data: {
+        incidentId: input.incidentId,
+        actorId: input.actorId,
+        type: input.type,
+        fromValue: input.fromValue ?? null,
+        toValue: input.toValue ?? null,
+      },
+    });
+  } catch {}
+}
+
 export async function addWatcher(incidentId: string, profileId: string) {
   try {
     await prisma.incidentWatcher.createMany({

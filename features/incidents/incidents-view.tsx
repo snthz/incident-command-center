@@ -96,9 +96,11 @@ export async function IncidentsView({
         </div>
       </header>
 
-      <Suspense fallback={<SeverityStatsSkeleton />}>
-        <SeverityStats view={view} basePath={basePath} projectId={project?.id} />
-      </Suspense>
+      <div className="hidden sm:block">
+        <Suspense fallback={<SeverityStatsSkeleton />}>
+          <SeverityStats view={view} basePath={basePath} projectId={project?.id} />
+        </Suspense>
+      </div>
 
       <div className="transition-opacity group-has-data-pending:opacity-60">
         {view === "board" ? (

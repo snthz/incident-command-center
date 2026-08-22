@@ -6,6 +6,7 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { requireUser } from "@/lib/dal";
 import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
 import { SeverityBadge } from "@/features/incidents/badges";
+import { DueDateField } from "@/features/incidents/due-date-field";
 import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
 import { InlineEditable } from "@/features/incidents/inline-edit";
 import { OwnerSelect } from "@/features/incidents/owner-select";
@@ -175,6 +176,16 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
                     ) : null}
                   </span>
                 )}
+              </DetailRow>
+              <DetailRow label="Due date">
+                <div className="-ml-2">
+                  <DueDateField
+                    incidentId={incident.id}
+                    incidentKey={incident.key}
+                    dueDate={incident.dueDate?.toISOString() ?? null}
+                    resolved={incident.status === "resolved"}
+                  />
+                </div>
               </DetailRow>
               <DetailRow label="Created">
                 <TimeAgo date={incident.createdAt} />

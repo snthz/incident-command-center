@@ -13,16 +13,42 @@ function initialsOf(name: string) {
     .toUpperCase();
 }
 
-function greetingFor(hour: number) {
-  if (hour < 5) return "Good night";
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  if (hour < 22) return "Good evening";
-  return "Good night";
+const daypartIcons = {
+  morning: (
+    <svg aria-hidden viewBox="0 0 16 16" className="size-4 text-amber-300/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 10.5a3.5 3.5 0 0 1 7 0M1.5 10.5h1.2M13.3 10.5h1.2M3.6 6.1l.8.8M12.4 6.1l-.8.8M8 3v1.7M2 13.5h12" />
+      <path d="M6.5 1.8 8 3.3l1.5-1.5" transform="translate(0 -0.3)" />
+    </svg>
+  ),
+  afternoon: (
+    <svg aria-hidden viewBox="0 0 16 16" className="size-4 text-amber-300/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="8" r="3" />
+      <path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" />
+    </svg>
+  ),
+  evening: (
+    <svg aria-hidden viewBox="0 0 16 16" className="size-4 text-orange-300/80" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 10.5a3.5 3.5 0 0 1 7 0M1.5 10.5h1.2M13.3 10.5h1.2M3.6 6.1l.8.8M12.4 6.1l-.8.8M2 13.5h12" />
+      <path d="M6.5 3.2 8 1.7l1.5 1.5" transform="rotate(180 8 2.85)" />
+    </svg>
+  ),
+  night: (
+    <svg aria-hidden viewBox="0 0 16 16" className="size-4 text-indigo-300/70" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13.5 9.8A5.7 5.7 0 0 1 6.2 2.5a5.7 5.7 0 1 0 7.3 7.3Z" />
+    </svg>
+  ),
+};
+
+function greetingFor(hour: number): { label: string; part: keyof typeof daypartIcons } {
+  if (hour < 5) return { label: "Good night", part: "night" };
+  if (hour < 12) return { label: "Good morning", part: "morning" };
+  if (hour < 18) return { label: "Good afternoon", part: "afternoon" };
+  if (hour < 22) return { label: "Good evening", part: "evening" };
+  return { label: "Good night", part: "night" };
 }
 
 function Greeting({ name }: { name: string }) {
-  const [greeting, setGreeting] = useState<string | null>(null);
+  const [greeting, setGreeting] = useState<ReturnType<typeof greetingFor> | null>(null);
   const firstName = name.split(" ")[0];
 
   useEffect(() => {
@@ -33,8 +59,15 @@ function Greeting({ name }: { name: string }) {
   }, []);
 
   return (
-    <span className="hidden text-sm text-muted sm:inline">
-      {greeting ? `${greeting}, ${firstName}!` : firstName}
+    <span className="hidden items-center gap-1.5 text-sm text-muted sm:flex">
+      {greeting ? (
+        <>
+          {`${greeting.label}, ${firstName}`}
+          {daypartIcons[greeting.part]}
+        </>
+      ) : (
+        firstName
+      )}
     </span>
   );
 }

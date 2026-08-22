@@ -6,6 +6,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   addWatcher,
+  logEvent,
   notify,
   notifyWatchers,
   removeWatcher,
@@ -17,6 +18,7 @@ import {
   moveIncidentSchema,
   postUpdateSchema,
   reorderIncidentSchema,
+  setDueDateSchema,
   watchIncidentSchema,
 } from "./schema";
 import { z } from "zod";
@@ -138,7 +140,7 @@ export async function reorderIncident(input: {
   }
 
   const target = parsed.data;
-  let moved: { id: string; key: string; title: string; ownerId: string | null; changed: boolean } | null = null;
+  let moved: { id: string; key: string; title: string; ownerId: string | null; status: string; changed: boolean } | null = null;
 
   try {
     moved = await prisma.$transaction(async (tx) => {
@@ -162,6 +164,13 @@ export async function reorderIncident(input: {
   }
 
   if (moved.changed) {
+    await logEvent({
+      incidentId: moved.id,
+      actorId: user.id,
+      type: "status_changed",
+      fromValue: moved.status,
+      toValue: target.status,
+    });
     await notifyWatchers({
       actorId: user.id,
       incident: moved,
@@ -187,7 +196,7 @@ export async function updateIncidentStatus(input: {
     return { error: "That status change is not valid." };
   }
 
-  let updated: { id: string; key: string; title: string; ownerId: string | null; changed: boolean } | null = null;
+  let updated: { id: string; key: string; title: string; ownerId: string | null; fromStatus: string; changed: boolean } | null = null;
 
   try {
     updated = await prisma.$transaction(async (tx) => {
@@ -203,13 +212,20 @@ export async function updateIncidentStatus(input: {
         data: { status, position: await endOfColumn(tx, status, id) },
         select: { id: true, key: true, title: true, ownerId: true },
       });
-      return { ...row, changed: current.status !== status };
+      return { ...row, fromStatus: current.status, changed: current.status !== status };
     });
   } catch {
     return { error: "Could not update the incident. Try again." };
   }
 
   if (updated.changed) {
+    await logEvent({
+      incidentId: updated.id,
+      actorId: user.id,
+      type: "status_changed",
+      fromValue: updated.fromStatus,
+      toValue: parsed.data.status,
+    });
     await notifyWatchers({
       actorId: user.id,
       incident: updated,
@@ -293,6 +309,7 @@ export async function createIncident(
     description: formData.get("description"),
     severity: formData.get("severity"),
     ownerId: formData.get("ownerId") ?? "",
+    dueDate: formData.get("dueDate") ?? "",
   });
 
   if (!parsed.success) {
@@ -322,6 +339,7 @@ export async function createIncident(
           description: parsed.data.description,
           severity: parsed.data.severity,
           ownerId: parsed.data.ownerId,
+          dueDate: parsed.data.dueDate,
           position: first ? first.position - 1 : 0,
         },
         select: { id: true, key: true, title: true, ownerId: true },
@@ -331,6 +349,7 @@ export async function createIncident(
     return { error: "Could not create the incident. Try again." };
   }
 
+  await logEvent({ incidentId: incident.id, actorId: user.id, type: "created" });
   await addWatcher(incident.id, user.id);
   if (incident.ownerId) await addWatcher(incident.id, incident.ownerId);
   await notify({
@@ -359,17 +378,37 @@ export async function assignIncident(input: {
   }
 
   let incident: { id: string; key: string; title: string; ownerId: string | null } | null = null;
+  let previousOwner: string | null = null;
 
   try {
+    const before = await prisma.incident.findUnique({
+      where: { id: parsed.data.id },
+      select: { owner: { select: { name: true } } },
+    });
+    previousOwner = before?.owner?.name ?? null;
     incident = await prisma.incident.update({
       where: { id: parsed.data.id },
       data: { ownerId: parsed.data.ownerId },
-      select: { id: true, key: true, title: true, ownerId: true },
+      select: {
+        id: true,
+        key: true,
+        title: true,
+        ownerId: true,
+        owner: { select: { name: true } },
+      },
     });
   } catch {
     return { error: "Could not change the assignee. Try again." };
   }
 
+  await logEvent({
+    incidentId: incident.id,
+    actorId: user.id,
+    type: "assignee_changed",
+    fromValue: previousOwner,
+    toValue:
+      (incident as { owner?: { name: string } | null }).owner?.name ?? null,
+  });
   if (incident.ownerId) await addWatcher(incident.id, incident.ownerId);
   await notify({
     recipientId: incident.ownerId,
@@ -399,7 +438,16 @@ export async function editIncidentText(input: {
     };
   }
 
+  let previousTitle: string | null = null;
+
   try {
+    if (parsed.data.title !== undefined) {
+      const before = await prisma.incident.findUnique({
+        where: { id: parsed.data.id },
+        select: { title: true },
+      });
+      previousTitle = before?.title ?? null;
+    }
     await prisma.incident.update({
       where: { id: parsed.data.id },
       data: {
@@ -410,6 +458,65 @@ export async function editIncidentText(input: {
   } catch {
     return { error: "Could not save the change. Try again." };
   }
+
+  if (parsed.data.title !== undefined) {
+    await logEvent({
+      incidentId: parsed.data.id,
+      actorId: user.id,
+      type: "title_edited",
+      fromValue: previousTitle,
+      toValue: parsed.data.title,
+    });
+  }
+  if (parsed.data.description !== undefined) {
+    await logEvent({
+      incidentId: parsed.data.id,
+      actorId: user.id,
+      type: "description_edited",
+    });
+  }
+
+  revalidateBoard();
+  return {};
+}
+
+export async function setIncidentDueDate(input: {
+  id: string;
+  dueDate: string;
+}): Promise<MoveIncidentResult> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = setDueDateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "That due date is not valid." };
+  }
+
+  let previousDueDate: string | null = null;
+
+  try {
+    const before = await prisma.incident.findUnique({
+      where: { id: parsed.data.id },
+      select: { dueDate: true },
+    });
+    previousDueDate = before?.dueDate?.toISOString().slice(0, 10) ?? null;
+    await prisma.incident.update({
+      where: { id: parsed.data.id },
+      data: { dueDate: parsed.data.dueDate },
+    });
+  } catch {
+    return { error: "Could not update the due date. Try again." };
+  }
+
+  await logEvent({
+    incidentId: parsed.data.id,
+    actorId: user.id,
+    type: "due_date_changed",
+    fromValue: previousDueDate,
+    toValue: parsed.data.dueDate?.toISOString().slice(0, 10) ?? null,
+  });
 
   revalidateBoard();
   return {};

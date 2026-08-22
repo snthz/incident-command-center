@@ -1,17 +1,18 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUser } from "@/lib/dal";
-import { LiveFeed } from "./live-feed";
-import { getIncidentUpdates } from "./queries";
+import { ActivityTabs } from "./activity-tabs";
+import { getIncidentEvents, getIncidentUpdates } from "./queries";
 
 export async function ActivityFeed({ incidentId }: { incidentId: string }) {
-  const [updates, user] = await Promise.all([
+  const [updates, events, user] = await Promise.all([
     getIncidentUpdates(incidentId),
+    getIncidentEvents(incidentId),
     getUser(),
   ]);
   if (!user) return null;
 
   return (
-    <LiveFeed
+    <ActivityTabs
       incidentId={incidentId}
       currentUser={{
         id: user.id,
@@ -28,6 +29,14 @@ export async function ActivityFeed({ incidentId }: { incidentId: string }) {
           ? { id: update.author.id, name: update.author.name }
           : null,
       }))}
+      initialEvents={events.map((event) => ({
+        id: event.id,
+        type: event.type,
+        fromValue: event.fromValue,
+        toValue: event.toValue,
+        actorName: event.actor?.name ?? null,
+        createdAt: event.createdAt.toISOString(),
+      }))}
     />
   );
 }
@@ -35,9 +44,11 @@ export async function ActivityFeed({ incidentId }: { incidentId: string }) {
 export function ActivityFeedSkeleton() {
   return (
     <div aria-busy className="flex flex-col gap-6">
+      <div className="flex items-center gap-1">
+        <Skeleton className="h-8 w-40" />
+      </div>
       <div className="flex flex-col gap-2">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-11 w-full" />
       </div>
       {[0, 1, 2].map((row) => (
         <div key={row} className="flex gap-3">

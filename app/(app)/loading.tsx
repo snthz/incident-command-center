@@ -25,7 +25,7 @@ export default function Loading() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="hidden gap-3 sm:grid sm:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
           <Skeleton key={index} className="h-25.5" />
         ))}

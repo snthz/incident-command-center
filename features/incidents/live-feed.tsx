@@ -304,7 +304,7 @@ export function LiveFeed({
               defaultValue={draft.value}
               id="update-message"
               name="message"
-              aria-label="Add an update"
+              aria-label="Add a comment"
               required
               maxLength={2000}
               placeholder="Share progress, findings or next steps…"
@@ -326,15 +326,15 @@ export function LiveFeed({
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <Avatar name={currentUser.name} />
             <button
               ref={openerRef}
               type="button"
               onClick={() => setComposerOpen(true)}
-              className="flex-1 rounded-md border border-line bg-surface-2/40 px-3 py-2.5 text-left text-sm text-neutral-600 transition-colors hover:border-neutral-600"
+              className="flex min-h-24 flex-1 items-start rounded-md border border-line bg-surface-2/40 px-3 py-2.5 text-left text-sm text-neutral-600 transition-colors hover:border-neutral-600"
             >
-              Add an update…
+              Add a comment…
             </button>
           </div>
           <p className="pl-10 text-xs text-muted">
@@ -342,7 +342,7 @@ export function LiveFeed({
             <kbd className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-neutral-300">
               U
             </kbd>{" "}
-            to add an update
+            to comment
           </p>
         </div>
       )}

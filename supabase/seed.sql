@@ -216,3 +216,16 @@ select i.id, i.owner_id
 from public.incidents i
 where i.owner_id is not null
 on conflict do nothing;
+
+update public.incidents set due_date = now() + interval '2 days' where key = 'CORE-7';
+update public.incidents set due_date = now() - interval '2 days' where key = 'PAY-1';
+update public.incidents set due_date = now() + interval '5 days' where key = 'CORE-4';
+
+insert into public.incident_events (incident_id, actor_id, type, to_value, created_at)
+select i.id, coalesce(i.owner_id, (select p.id from public.profiles p order by p.name limit 1)), 'created', null, i.created_at
+from public.incidents i;
+
+insert into public.incident_events (incident_id, actor_id, type, from_value, to_value, created_at)
+select i.id, coalesce(i.owner_id, (select p.id from public.profiles p order by p.name limit 1)), 'status_changed', 'investigating', i.status::text, i.updated_at
+from public.incidents i
+where i.status <> 'investigating';
