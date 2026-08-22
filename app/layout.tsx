@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { WebVitalsReporter } from "@/features/observability/web-vitals-reporter";
 import { getPublicEnv } from "@/lib/public-env";
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: envScript }} />
+        <WebVitalsReporter />
         {children}
       </body>
     </html>

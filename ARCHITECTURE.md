@@ -138,5 +138,5 @@ No global state library — each kind of state lives in the smallest tool that o
 2. **Cursor-based pagination + virtualized lists** for feeds and boards, and moving dashboard filtering server-side behind an index once data grows.
 3. **Role-based authorization** enforced in server actions and RLS (admin vs. member), plus per-project membership.
 4. **Presence** (who is viewing this incident) via Supabase presence channels, and draft preservation for unsent updates.
-5. **Observability**: web-vitals reporting and frontend error tracking (Sentry) wired to the existing error boundaries.
+5. **Observability**: Core Web Vitals are already collected with Next's native `useReportWebVitals` (`features/observability/web-vitals-reporter.tsx`, logged as structured `console.debug` entries). The next step is shipping them from that single callback to a RUM backend — Datadog RUM correlated with APM, or Sentry — plus frontend error tracking wired to the existing error boundaries.
 6. **Multi-organization support**: org switcher, invitations, and scoping every query by the active org id already present in the schema.

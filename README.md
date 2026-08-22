@@ -12,6 +12,7 @@ Built for a senior frontend technical assessment. The architecture decisions beh
 - **Incident detail** — server-rendered metadata, streamed activity feed, inline title/description editing (optimistic with automatic revert), assignee picker with people search, editable due date with a custom calendar, watchers, Comments/History tabs with a full audit log.
 - **Real-time** — live feed updates, status/assignee changes, typing indicators, and per-user notifications (bell + badge) over Supabase Realtime with RLS-scoped subscriptions. Toasts confirm only your own actions; other people's activity arrives silently as badges and live regions.
 - **Accessibility** — full keyboard support (APG patterns for menus, comboboxes, dialogs), visible focus, `aria-live` announcements, semantic landmarks, color-independent status badges.
+- **Performance instrumentation** — Core Web Vitals (LCP, CLS, INP, FCP, TTFB) reported through Next's native `useReportWebVitals` hook as structured `console.debug` entries; the reporter callback is the single point where a RUM backend (Datadog, Sentry) would plug in.
 
 ## Stack
 
