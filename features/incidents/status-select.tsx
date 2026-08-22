@@ -22,17 +22,14 @@ export function StatusSelect({
 
   function change(next: IncidentStatus) {
     if (next === optimisticStatus) return;
-    const toastId = toast.push(
-      "loading",
-      `Moving ${incidentKey} to ${statusLabels[next]}…`,
-    );
+    const toastId = toast.push("loading", `Moving ${incidentKey}…`);
     startTransition(async () => {
       setOptimisticStatus(next);
       const result = await updateIncidentStatus({ id: incidentId, status: next });
       if (result.error) {
         toast.update(toastId, "error", result.error);
       } else {
-        toast.update(toastId, "success", `${incidentKey} moved to ${statusLabels[next]}`);
+        toast.update(toastId, "success", `${incidentKey} → ${statusLabels[next]}`);
       }
     });
   }

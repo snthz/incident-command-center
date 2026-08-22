@@ -192,6 +192,8 @@ export function NewIncidentSheet({
                 id={`${baseId}-assignee`}
                 labelId={`${baseId}-assignee-label`}
                 className="w-full"
+                searchable
+                searchPlaceholder="Search people…"
                 options={assigneeOptions(profiles)}
                 value={ownerId}
                 onChange={setOwnerId}

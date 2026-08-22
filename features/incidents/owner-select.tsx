@@ -30,7 +30,7 @@ export function OwnerSelect({
   function change(next: string) {
     if (next === optimisticOwner) return;
     const label = next ? nameOf(next) : "Unassigned";
-    const toastId = toast.push("loading", `Assigning ${incidentKey} to ${label}…`);
+    const toastId = toast.push("loading", `Assigning ${incidentKey}…`);
     startTransition(async () => {
       setOptimisticOwner(next);
       const result = await assignIncident({ id: incidentId, ownerId: next });
@@ -40,7 +40,7 @@ export function OwnerSelect({
         toast.update(
           toastId,
           "success",
-          next ? `${incidentKey} assigned to ${label}` : `${incidentKey} unassigned`,
+          next ? `${incidentKey} → ${label}` : `${incidentKey} unassigned`,
         );
       }
     });
@@ -51,6 +51,8 @@ export function OwnerSelect({
       aria-label="Assignee"
       variant="ghost"
       align={align}
+      searchable
+      searchPlaceholder="Search people…"
       value={optimisticOwner}
       disabled={isPending}
       onChange={change}

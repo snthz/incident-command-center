@@ -98,7 +98,7 @@ export const getOrganization = cache(async () => {
 
 export const getOrgProjects = cache(async () => {
   return prisma.project.findMany({
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ createdAt: "asc" }, { name: "asc" }],
   });
 });
 

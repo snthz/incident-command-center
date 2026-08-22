@@ -4,7 +4,6 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { TimeAgo } from "@/components/ui/time-ago";
-import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import { createRealtimeClient } from "@/lib/supabase/client";
 import { markAllNotificationsRead, markNotificationRead } from "./actions";
@@ -15,6 +14,12 @@ const verbs: Record<NotificationType, string> = {
   update_posted: "posted an update on",
   status_changed: "changed the status of",
   assigned: "assigned you to",
+};
+
+const shortVerbs: Record<NotificationType, string> = {
+  update_posted: "posted on",
+  status_changed: "moved",
+  assigned: "assigned you",
 };
 
 const typeIcons: Record<NotificationType, React.ReactNode> = {
@@ -56,7 +61,6 @@ export function NotificationsPanel({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
-  const toast = useToast();
 
   const liveOnly = liveItems.filter(
     (item) => !initialItems.some((existing) => existing.id === item.id),
@@ -158,9 +162,9 @@ export function NotificationsPanel({
                 ? current
                 : [item, ...current],
             );
-            const summary = `${item.actorName ?? "Someone"} ${verbs[item.type]} ${item.incidentKey}`;
-            setAnnouncement(summary);
-            toast.push("success", summary);
+            setAnnouncement(
+              `${item.actorName?.split(" ")[0] ?? "Someone"} ${shortVerbs[item.type]} ${item.incidentKey}`,
+            );
           },
         )
         .subscribe();
@@ -170,7 +174,7 @@ export function NotificationsPanel({
       cancelled = true;
       if (client && channel) client.removeChannel(channel);
     };
-  }, [userId, toast]);
+  }, [userId]);
 
   const openItem = (item: NotificationItem) => {
     setOpen(false);
@@ -251,7 +255,7 @@ export function NotificationsPanel({
                     onClick={() => openItem(item)}
                     className={cn(
                       "flex gap-3 px-4 py-3 transition-colors hover:bg-white/5",
-                      !item.read && "bg-brand/[0.04]",
+                      !item.read && "bg-brand/4",
                     )}
                   >
                     <span

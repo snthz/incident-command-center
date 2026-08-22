@@ -120,9 +120,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
     const changesColumn = incident.status !== target.status;
     const toastId = toast.push(
       "loading",
-      changesColumn
-        ? `Moving "${incident.title}" to ${statusLabels[target.status]}…`
-        : `Reordering "${incident.title}"…`,
+      changesColumn ? `Moving ${incident.key}…` : `Reordering ${incident.key}…`,
     );
 
     startTransition(async () => {
@@ -140,8 +138,8 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
           toastId,
           "success",
           changesColumn
-            ? `"${incident.title}" moved to ${statusLabels[target.status]}`
-            : `"${incident.title}" reordered`,
+            ? `${incident.key} → ${statusLabels[target.status]}`
+            : `${incident.key} reordered`,
         );
       }
     });
@@ -157,10 +155,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
         item.status === status && item.id !== id ? item.id : last,
       null,
     );
-    const toastId = toast.push(
-      "loading",
-      `Moving "${incident.title}" to ${statusLabels[status]}…`,
-    );
+    const toastId = toast.push("loading", `Moving ${incident.key}…`);
 
     startTransition(async () => {
       applyMove({ id, status, beforeId: lastInColumn, afterId: null });
@@ -171,7 +166,7 @@ export function IncidentBoard({ incidents }: { incidents: IncidentListItem[] }) 
         toast.update(
           toastId,
           "success",
-          `"${incident.title}" moved to ${statusLabels[status]}`,
+          `${incident.key} → ${statusLabels[status]}`,
         );
       }
     });
