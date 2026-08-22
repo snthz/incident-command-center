@@ -77,6 +77,29 @@ export const createIncidentSchema = z.object({
     .transform((value) => (value === "" ? null : value)),
 });
 
+export const editIncidentSchema = z
+  .object({
+    id: z.string().regex(uuidPattern),
+    title: z
+      .string()
+      .trim()
+      .min(8, "Give it a descriptive title (at least 8 characters).")
+      .max(150, "Keep the title under 150 characters.")
+      .optional(),
+    description: z
+      .string()
+      .trim()
+      .min(20, "Describe the impact and what is failing (at least 20 characters).")
+      .max(5000, "Keep the description under 5,000 characters.")
+      .optional(),
+  })
+  .refine((data) => data.title !== undefined || data.description !== undefined);
+
+export const watchIncidentSchema = z.object({
+  incidentId: z.string().regex(uuidPattern),
+  watch: z.boolean(),
+});
+
 export const assignIncidentSchema = z.object({
   id: z.string().regex(uuidPattern),
   ownerId: z

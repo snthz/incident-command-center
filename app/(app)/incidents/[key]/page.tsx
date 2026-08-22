@@ -7,10 +7,12 @@ import { requireUser } from "@/lib/dal";
 import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
 import { SeverityBadge } from "@/features/incidents/badges";
 import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
+import { InlineEditable } from "@/features/incidents/inline-edit";
 import { OwnerSelect } from "@/features/incidents/owner-select";
 import { getIncident, getProfiles } from "@/features/incidents/queries";
 import { incidentKeyPattern } from "@/features/incidents/schema";
 import { StatusSelect } from "@/features/incidents/status-select";
+import { WatchButton } from "@/features/incidents/watch-button";
 
 export async function generateMetadata({
   params,
@@ -34,13 +36,26 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export default async function IncidentDetailPage({ params }: PageProps<"/incidents/[key]">) {
-  await requireUser();
+  const user = await requireUser();
   const { key } = await params;
   if (!incidentKeyPattern.test(key)) notFound();
 
   const [incident, profiles] = await Promise.all([getIncident(key), getProfiles()]);
   if (!incident) notFound();
+
+  const watching = incident.watchers.some(
+    (watcher) => watcher.profileId === user.id,
+  );
 
   return (
     <article className="flex flex-col gap-5">
@@ -65,13 +80,29 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="flex min-w-0 flex-col gap-8">
-          <h1 className="text-2xl font-semibold text-foreground">{incident.title}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">
+            <InlineEditable
+              incidentId={incident.id}
+              incidentKey={incident.key}
+              field="title"
+              value={incident.title}
+              editClassName="text-2xl font-semibold"
+            />
+          </h1>
 
           <section aria-label="Description">
             <h2 className="mb-2 text-sm font-semibold text-foreground">Description</h2>
-            <p className="max-w-3xl text-sm leading-relaxed text-neutral-300">
-              {incident.description}
-            </p>
+            <div className="max-w-3xl text-sm leading-relaxed text-neutral-300">
+              <InlineEditable
+                incidentId={incident.id}
+                incidentKey={incident.key}
+                field="description"
+                value={incident.description}
+                multiline
+                displayClassName="whitespace-pre-line"
+                editClassName="text-sm leading-relaxed"
+              />
+            </div>
           </section>
 
           <section aria-label="Activity" className="min-w-0">
@@ -88,11 +119,16 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
           aria-label="Incident details"
           className="flex h-fit flex-col gap-4 lg:sticky lg:top-14"
         >
-          <div className="w-fit">
+          <div className="flex flex-wrap items-center gap-2">
             <StatusSelect
               incidentId={incident.id}
               incidentKey={incident.key}
               status={incident.status}
+            />
+            <WatchButton
+              incidentId={incident.id}
+              incidentKey={incident.key}
+              watching={watching}
             />
           </div>
 
@@ -114,6 +150,31 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
               </DetailRow>
               <DetailRow label="Severity">
                 <SeverityBadge severity={incident.severity} />
+              </DetailRow>
+              <DetailRow label="Watchers">
+                {incident.watchers.length === 0 ? (
+                  <span className="text-muted">No one yet</span>
+                ) : (
+                  <span className="flex items-center">
+                    <span className="flex -space-x-1.5">
+                      {incident.watchers.slice(0, 4).map((watcher) => (
+                        <span
+                          key={watcher.profileId}
+                          title={watcher.profile.name}
+                          className="flex size-6 items-center justify-center rounded-full bg-surface-2 text-[9px] font-semibold text-neutral-300 ring-2 ring-surface"
+                        >
+                          {initialsOf(watcher.profile.name)}
+                          <span className="sr-only">{watcher.profile.name}</span>
+                        </span>
+                      ))}
+                    </span>
+                    {incident.watchers.length > 4 ? (
+                      <span className="ml-1.5 text-xs text-muted">
+                        +{incident.watchers.length - 4}
+                      </span>
+                    ) : null}
+                  </span>
+                )}
               </DetailRow>
               <DetailRow label="Created">
                 <TimeAgo date={incident.createdAt} />

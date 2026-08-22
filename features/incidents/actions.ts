@@ -4,13 +4,20 @@ import { revalidatePath } from "next/cache";
 import { getUser } from "@/lib/dal";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { notify } from "@/features/notifications/service";
+import {
+  addWatcher,
+  notify,
+  notifyWatchers,
+  removeWatcher,
+} from "@/features/notifications/service";
 import {
   assignIncidentSchema,
   createIncidentSchema,
+  editIncidentSchema,
   moveIncidentSchema,
   postUpdateSchema,
   reorderIncidentSchema,
+  watchIncidentSchema,
 } from "./schema";
 import { z } from "zod";
 
@@ -155,8 +162,7 @@ export async function reorderIncident(input: {
   }
 
   if (moved.changed) {
-    await notify({
-      recipientId: moved.ownerId,
+    await notifyWatchers({
       actorId: user.id,
       incident: moved,
       type: "status_changed",
@@ -204,8 +210,7 @@ export async function updateIncidentStatus(input: {
   }
 
   if (updated.changed) {
-    await notify({
-      recipientId: updated.ownerId,
+    await notifyWatchers({
       actorId: user.id,
       incident: updated,
       type: "status_changed",
@@ -252,8 +257,8 @@ export async function postIncidentUpdate(input: {
     return { error: "Could not post the update. Try again." };
   }
 
-  await notify({
-    recipientId: incident.ownerId,
+  await addWatcher(incident.id, user.id);
+  await notifyWatchers({
     actorId: user.id,
     incident,
     type: "update_posted",
@@ -326,6 +331,8 @@ export async function createIncident(
     return { error: "Could not create the incident. Try again." };
   }
 
+  await addWatcher(incident.id, user.id);
+  if (incident.ownerId) await addWatcher(incident.id, incident.ownerId);
   await notify({
     recipientId: incident.ownerId,
     actorId: user.id,
@@ -363,6 +370,7 @@ export async function assignIncident(input: {
     return { error: "Could not change the assignee. Try again." };
   }
 
+  if (incident.ownerId) await addWatcher(incident.id, incident.ownerId);
   await notify({
     recipientId: incident.ownerId,
     actorId: user.id,
@@ -371,5 +379,62 @@ export async function assignIncident(input: {
   });
 
   revalidateBoard();
+  return {};
+}
+
+export async function editIncidentText(input: {
+  id: string;
+  title?: string;
+  description?: string;
+}): Promise<MoveIncidentResult> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = editIncidentSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "That change is not valid.",
+    };
+  }
+
+  try {
+    await prisma.incident.update({
+      where: { id: parsed.data.id },
+      data: {
+        title: parsed.data.title,
+        description: parsed.data.description,
+      },
+    });
+  } catch {
+    return { error: "Could not save the change. Try again." };
+  }
+
+  revalidateBoard();
+  return {};
+}
+
+export async function toggleWatchIncident(input: {
+  incidentId: string;
+  watch: boolean;
+}): Promise<MoveIncidentResult> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = watchIncidentSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "That watch request is not valid." };
+  }
+
+  if (parsed.data.watch) {
+    await addWatcher(parsed.data.incidentId, user.id);
+  } else {
+    await removeWatcher(parsed.data.incidentId, user.id);
+  }
+
+  revalidatePath("/incidents/[key]", "page");
   return {};
 }

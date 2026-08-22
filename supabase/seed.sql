@@ -204,3 +204,15 @@ from (values
   ('ad9f30b9-72e3-4d16-b8d8-0df35ccc3d96'::uuid, '1d193a45-2930-42e9-b771-814c49c92681'::uuid, 'a0000000-0000-0000-0000-000000000004'::uuid, 'assigned', now() - interval '1 day', now() - interval '1 day 2 hours')
 ) as n(recipient_id, actor_id, incident_id, type, read_at, created_at)
 join public.incidents i on i.id = n.incident_id;
+
+insert into public.incident_watchers (incident_id, profile_id)
+select distinct u.incident_id, u.author_id
+from public.incident_updates u
+where u.author_id is not null
+on conflict do nothing;
+
+insert into public.incident_watchers (incident_id, profile_id)
+select i.id, i.owner_id
+from public.incidents i
+where i.owner_id is not null
+on conflict do nothing;

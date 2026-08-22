@@ -88,7 +88,14 @@ export type ProfileOption = Awaited<ReturnType<typeof getProfiles>>[number];
 export const getIncident = cache(async (key: string) => {
   return prisma.incident.findUnique({
     where: { key: key.toUpperCase() },
-    include: { owner: true, project: true },
+    include: {
+      owner: true,
+      project: true,
+      watchers: {
+        include: { profile: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "asc" },
+      },
+    },
   });
 });
 

@@ -80,8 +80,22 @@ model Profile {
   notificationsReceived Notification[]       @relation("NotificationRecipient")
   notificationsSent     Notification[]       @relation("NotificationActor")
   memberships           OrganizationMember[]
+  watching              IncidentWatcher[]
 
   @@map("profiles")
+}
+
+model IncidentWatcher {
+  incidentId String   @map("incident_id") @db.Uuid
+  profileId  String   @map("profile_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  profile  Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@id([incidentId, profileId])
+  @@index([profileId])
+  @@map("incident_watchers")
 }
 
 model Incident {
@@ -99,10 +113,11 @@ model Incident {
   resolvedAt  DateTime?        @map("resolved_at") @db.Timestamptz(6)
   position    Float            @default(0)
 
-  owner         Profile?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner         Profile?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   updates       IncidentUpdate[]
   notifications Notification[]
+  watchers      IncidentWatcher[]
 
   @@unique([projectId, number])
 
