@@ -8,6 +8,8 @@ import { SidebarContent, SidebarSkeleton } from "@/features/navigation/sidebar";
 import { TeamAvatars } from "@/features/navigation/team-avatars";
 import { NotificationsBell } from "@/features/notifications/bell";
 
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <Suspense fallback={<SidebarSkeleton />}>
