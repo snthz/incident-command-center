@@ -15,9 +15,11 @@ export function MobileSidebar({ children }: { children: React.ReactNode }) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  useEffect(() => {
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <>

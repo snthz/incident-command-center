@@ -124,7 +124,7 @@ export function NewIncidentSheet({
       setDueDate("");
       setOpen(false);
     }
-  }, [state.createdKey, toast]);
+  }, [state.createdKey, toast, initialProjectId]);
 
   return (
     <>

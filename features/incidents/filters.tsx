@@ -31,11 +31,16 @@ export function IncidentFiltersBar({
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [lastAppliedQuery, setLastAppliedQuery] = useState(filters.q);
+  if (filters.q !== lastAppliedQuery) {
+    setLastAppliedQuery(filters.q);
+    if (filters.q) setSearchOpen(true);
+  }
+
   useEffect(() => {
     if (document.activeElement !== searchRef.current) {
       setQuery(filters.q ?? "");
     }
-    if (filters.q) setSearchOpen(true);
   }, [filters.q]);
 
   useEffect(() => {
