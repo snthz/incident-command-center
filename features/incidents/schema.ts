@@ -74,6 +74,15 @@ export const postUpdateSchema = z.object({
   attachments: z.array(attachmentMetaSchema).max(MAX_ATTACHMENTS_PER_POST).optional(),
 });
 
+export const editUpdateSchema = z.object({
+  id: z.string().regex(uuidPattern),
+  message: z.string().trim().min(1).max(2000),
+});
+
+export const deleteUpdateSchema = z.object({
+  id: z.string().regex(uuidPattern),
+});
+
 export const addAttachmentSchema = z.object({
   incidentId: z.string().regex(uuidPattern),
   attachment: attachmentMetaSchema,

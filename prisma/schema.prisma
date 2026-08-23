@@ -149,11 +149,12 @@ model Incident {
 }
 
 model IncidentUpdate {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  incidentId String   @map("incident_id") @db.Uuid
-  authorId   String?  @map("author_id") @db.Uuid
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  incidentId String    @map("incident_id") @db.Uuid
+  authorId   String?   @map("author_id") @db.Uuid
   message    String
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  editedAt   DateTime? @map("edited_at") @db.Timestamptz(6)
 
   incident    Incident             @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   author      Profile?             @relation(fields: [authorId], references: [id], onDelete: SetNull)

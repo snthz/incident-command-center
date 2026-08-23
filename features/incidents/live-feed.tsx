@@ -13,7 +13,12 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import { createRealtimeClient } from "@/lib/supabase/client";
-import { postIncidentUpdate } from "./actions";
+import {
+  deleteIncidentUpdate,
+  editIncidentUpdate,
+  postIncidentUpdate,
+  removeIncidentAttachment,
+} from "./actions";
 import {
   AttachmentRow,
   PaperclipIcon,
@@ -28,6 +33,7 @@ export type FeedUpdate = {
   id: string;
   message: string;
   createdAt: Date;
+  editedAt?: Date | null;
   author: { id: string; name: string } | null;
   attachments?: AttachmentItemData[];
   pending?: boolean;
@@ -95,6 +101,18 @@ export function LiveFeed({
     Map<string, AttachmentItemData[]>
   >(new Map());
   const [realtimeUpdates, setRealtimeUpdates] = useState<FeedUpdate[]>([]);
+  // Own edits/deletes apply optimistically; foreign ones arrive over realtime.
+  // Both land here so server props can lag behind without visual flicker.
+  const [editedOverrides, setEditedOverrides] = useState<
+    Map<string, { message: string; editedAt: Date }>
+  >(new Map());
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [removedAttachmentIds, setRemovedAttachmentIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [connection, setConnection] = useState<LiveConnectionState>("connecting");
   const [announcement, setAnnouncement] = useState("");
   const [pendingUpdates, addPendingUpdate] = useOptimistic<FeedUpdate[], FeedUpdate>(
@@ -178,6 +196,48 @@ export function LiveFeed({
         .on(
           "postgres_changes",
           {
+            event: "UPDATE",
+            schema: "public",
+            table: "incident_updates",
+            filter: `incident_id=eq.${incidentId}`,
+          },
+          (payload) => {
+            const row = payload.new as {
+              id: string;
+              message: string;
+              edited_at: string | null;
+            };
+            setEditedOverrides((current) => {
+              const next = new Map(current);
+              next.set(row.id, {
+                message: row.message,
+                editedAt: row.edited_at ? new Date(row.edited_at) : new Date(),
+              });
+              return next;
+            });
+            scheduleRefresh();
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table: "incident_updates",
+            filter: `incident_id=eq.${incidentId}`,
+          },
+          (payload) => {
+            const row = payload.old as { id?: string };
+            if (row?.id) {
+              const removedId = row.id;
+              setDeletedIds((current) => new Set(current).add(removedId));
+            }
+            scheduleRefresh();
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
             event: "INSERT",
             schema: "public",
             table: "incident_attachments",
@@ -222,7 +282,16 @@ export function LiveFeed({
             table: "incident_attachments",
             filter: `incident_id=eq.${incidentId}`,
           },
-          scheduleRefresh,
+          (payload) => {
+            const row = payload.old as { id?: string };
+            if (row?.id) {
+              const removedId = row.id;
+              setRemovedAttachmentIds((current) =>
+                new Set(current).add(removedId),
+              );
+            }
+            scheduleRefresh();
+          },
         )
         .on("broadcast", { event: "typing" }, (message) => {
           const { userId, typing } = message.payload as {
@@ -323,11 +392,77 @@ export function LiveFeed({
     setComposerOpen(false);
   }
 
+  function startEdit(update: FeedUpdate, message: string) {
+    setConfirmingId(null);
+    setEditingId(update.id);
+    setEditDraft(message);
+  }
+
+  async function saveEdit(update: FeedUpdate, currentMessage: string) {
+    const next = editDraft.trim();
+    setEditingId(null);
+    if (!next || next === currentMessage) return;
+    const previous = editedOverrides.get(update.id);
+    setEditedOverrides((current) =>
+      new Map(current).set(update.id, { message: next, editedAt: new Date() }),
+    );
+    const result = await editIncidentUpdate({ id: update.id, message: next });
+    if (result.error) {
+      setEditedOverrides((current) => {
+        const reverted = new Map(current);
+        if (previous) {
+          reverted.set(update.id, previous);
+        } else {
+          reverted.delete(update.id);
+        }
+        return reverted;
+      });
+      toast.push("error", result.error);
+    } else {
+      toast.push("success", "Comment updated");
+      router.refresh();
+    }
+  }
+
+  async function removeComment(update: FeedUpdate) {
+    setConfirmingId(null);
+    setDeletedIds((current) => new Set(current).add(update.id));
+    const result = await deleteIncidentUpdate({ id: update.id });
+    if (result.error) {
+      setDeletedIds((current) => {
+        const reverted = new Set(current);
+        reverted.delete(update.id);
+        return reverted;
+      });
+      toast.push("error", result.error);
+    } else {
+      toast.push("success", "Comment deleted");
+      router.refresh();
+    }
+  }
+
+  async function removeCommentAttachment(attachment: AttachmentItemData) {
+    setRemovedAttachmentIds((current) => new Set(current).add(attachment.id));
+    const result = await removeIncidentAttachment({ id: attachment.id });
+    if (result.error) {
+      setRemovedAttachmentIds((current) => {
+        const reverted = new Set(current);
+        reverted.delete(attachment.id);
+        return reverted;
+      });
+      toast.push("error", result.error);
+    } else {
+      toast.push("success", `${attachment.fileName} removed`);
+      router.refresh();
+    }
+  }
+
   // Realtime, server-rendered and optimistic items overlap after a refresh —
   // merge by id, newest first.
   const seen = new Set<string>();
   const feed = [...realtimeUpdates, ...initialUpdates, ...pendingUpdates]
     .filter((update) => (seen.has(update.id) ? false : (seen.add(update.id), true)))
+    .filter((update) => !deletedIds.has(update.id))
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
@@ -541,60 +676,167 @@ export function LiveFeed({
         />
       ) : (
         <ol aria-label="Incident updates" className="flex flex-col">
-          {feed.map((update, index) => (
-            <li
-              key={update.id}
-              className={cn(
-                "relative flex gap-3 pb-6 last:pb-0",
-                update.pending && "opacity-60",
-              )}
-            >
-              {index < feed.length - 1 ? (
+          {feed.map((update, index) => {
+            const override = editedOverrides.get(update.id);
+            const message = override?.message ?? update.message;
+            const editedAt = override?.editedAt ?? update.editedAt;
+            const isOwn = !update.pending && update.author?.id === currentUser.id;
+            const isEditing = editingId === update.id;
+            const attachments = (
+              update.attachments?.length
+                ? update.attachments
+                : (liveAttachments.get(update.id) ?? [])
+            ).filter((attachment) => !removedAttachmentIds.has(attachment.id));
+            return (
+              <li
+                key={update.id}
+                className={cn(
+                  "group relative flex gap-3 pb-6 last:pb-0",
+                  update.pending && "opacity-60",
+                )}
+              >
+                {index < feed.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className="absolute left-3.5 top-7 h-full w-px bg-line"
+                  />
+                ) : null}
                 <span
                   aria-hidden
-                  className="absolute left-3.5 top-7 h-full w-px bg-line"
-                />
-              ) : null}
-              <span
-                aria-hidden
-                className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface-2 text-[10px] font-semibold text-neutral-300"
-              >
-                {update.author ? initialsOf(update.author.name) : "?"}
-              </span>
-              <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
-                <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {update.author?.name ?? "Former member"}
-                  </span>
-                  {update.pending ? (
-                    <span className="text-xs text-muted">Sending…</span>
+                  className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface-2 text-[10px] font-semibold text-neutral-300"
+                >
+                  {update.author ? initialsOf(update.author.name) : "?"}
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
+                  <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                    <span className="font-medium text-foreground">
+                      {update.author?.name ?? "Former member"}
+                    </span>
+                    {update.pending ? (
+                      <span className="text-xs text-muted">Sending…</span>
+                    ) : (
+                      <TimeAgo date={update.createdAt} className="text-xs text-muted" />
+                    )}
+                    {editedAt && !update.pending ? (
+                      <span className="text-xs italic text-muted">Edited</span>
+                    ) : null}
+                    {isOwn && !isEditing ? (
+                      <span className="ml-auto flex gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                        <button
+                          type="button"
+                          aria-label="Edit comment"
+                          onClick={() => startEdit(update, message)}
+                          className="flex size-6 items-center justify-center rounded text-muted transition-colors hover:bg-white/5 hover:text-neutral-200"
+                        >
+                          <svg aria-hidden viewBox="0 0 14 14" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m9.5 2.6 2 2L5 11l-2.6.6L3 9l6.5-6.4ZM8.4 3.7l1.9 1.9" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Delete comment"
+                          onClick={() => {
+                            setEditingId(null);
+                            setConfirmingId(update.id);
+                          }}
+                          className="flex size-6 items-center justify-center rounded text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+                        >
+                          <svg aria-hidden viewBox="0 0 14 14" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2.5 4h9M5.5 4V2.8h3V4M3.5 4l.5 7.5h6L10.5 4M5.8 6v3.5M8.2 6v3.5" />
+                          </svg>
+                        </button>
+                      </span>
+                    ) : null}
+                  </p>
+                  {isEditing ? (
+                    <div className="flex flex-col gap-2">
+                      <Textarea
+                        autoFocus
+                        value={editDraft}
+                        aria-label="Edit comment"
+                        maxLength={2000}
+                        onChange={(event) => setEditDraft(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") {
+                            event.preventDefault();
+                            setEditingId(null);
+                          } else if (
+                            event.key === "Enter" &&
+                            (event.metaKey || event.ctrlKey)
+                          ) {
+                            event.preventDefault();
+                            saveEdit(update, message);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          className="px-2.5 py-1"
+                          onClick={() => saveEdit(update, message)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          className="px-2.5 py-1"
+                          variant="ghost"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <span className="ml-1 text-xs text-muted">
+                          ⌘↵ to save · Esc to cancel
+                        </span>
+                      </div>
+                    </div>
                   ) : (
-                    <TimeAgo date={update.createdAt} className="text-xs text-muted" />
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-neutral-300">
+                      {message}
+                    </p>
                   )}
-                </p>
-                <p className="text-sm leading-relaxed text-neutral-300">
-                  {update.message}
-                </p>
-                {(() => {
-                  const attachments = update.attachments?.length
-                    ? update.attachments
-                    : liveAttachments.get(update.id);
-                  if (!attachments?.length) return null;
-                  return (
+                  {attachments.length ? (
                     <ul aria-label="Attachments" className="mt-1 flex max-w-md flex-col gap-1.5">
                       {attachments.map((attachment) => (
                         <AttachmentRow
                           key={attachment.id}
                           attachment={attachment}
                           compact
+                          onRemove={
+                            isOwn
+                              ? () => removeCommentAttachment(attachment)
+                              : undefined
+                          }
                         />
                       ))}
                     </ul>
-                  );
-                })()}
-              </div>
-            </li>
-          ))}
+                  ) : null}
+                  {confirmingId === update.id ? (
+                    <div className="mt-1 flex items-center gap-2 rounded-md border border-red-500/25 bg-red-500/5 px-3 py-2">
+                      <span className="flex-1 text-sm text-neutral-300">
+                        Delete this comment?
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={() => removeComment(update)}
+                        className="bg-red-500/80 px-2.5 py-1 text-white hover:bg-red-500"
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        type="button"
+                        className="px-2.5 py-1"
+                        variant="ghost"
+                        onClick={() => setConfirmingId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>

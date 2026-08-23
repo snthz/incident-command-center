@@ -25,6 +25,7 @@ export async function ActivityFeed({ incidentId }: { incidentId: string }) {
         id: update.id,
         message: update.message,
         createdAt: update.createdAt,
+        editedAt: update.editedAt,
         author: update.author
           ? { id: update.author.id, name: update.author.name }
           : null,

@@ -3,6 +3,7 @@ import {
   attachmentMetaSchema,
   createIncidentSchema,
   editIncidentSchema,
+  editUpdateSchema,
   incidentKeyPattern,
   MAX_ATTACHMENT_BYTES,
   parseDashboardView,
@@ -155,6 +156,17 @@ describe("attachments", () => {
     ).toBe(true);
     expect(
       postUpdateSchema.safeParse({ ...base, attachments: Array(6).fill(meta) }).success,
+    ).toBe(false);
+  });
+});
+
+describe("editUpdateSchema", () => {
+  it("trims the message and enforces the 2,000 character cap", () => {
+    expect(
+      editUpdateSchema.parse({ id: uuid, message: "  Revised.  " }).message,
+    ).toBe("Revised.");
+    expect(
+      editUpdateSchema.safeParse({ id: uuid, message: "x".repeat(2001) }).success,
     ).toBe(false);
   });
 });

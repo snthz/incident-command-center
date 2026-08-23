@@ -16,7 +16,9 @@ import {
   addAttachmentSchema,
   assignIncidentSchema,
   createIncidentSchema,
+  deleteUpdateSchema,
   editIncidentSchema,
+  editUpdateSchema,
   moveIncidentSchema,
   postUpdateSchema,
   removeAttachmentSchema,
@@ -303,6 +305,92 @@ export async function postIncidentUpdate(input: {
   return {};
 }
 
+// Comments are owned: only the author may edit or delete them. Prisma runs
+// privileged, so the ownership check lives here rather than in RLS.
+export async function editIncidentUpdate(input: {
+  id: string;
+  message: string;
+}): Promise<{ error?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = editUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "The comment is not valid." };
+  }
+
+  try {
+    const existing = await prisma.incidentUpdate.findUnique({
+      where: { id: parsed.data.id },
+      select: { authorId: true },
+    });
+    if (!existing) {
+      return { error: "That comment no longer exists." };
+    }
+    if (existing.authorId !== user.id) {
+      return { error: "Only the author can edit this comment." };
+    }
+    await prisma.incidentUpdate.update({
+      where: { id: parsed.data.id },
+      data: { message: parsed.data.message, editedAt: new Date() },
+    });
+  } catch {
+    return { error: "Could not edit the comment. Try again." };
+  }
+
+  revalidateBoard();
+  return {};
+}
+
+export async function deleteIncidentUpdate(input: {
+  id: string;
+}): Promise<{ error?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = deleteUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "That comment is not valid." };
+  }
+
+  let filePaths: string[] = [];
+  try {
+    const existing = await prisma.incidentUpdate.findUnique({
+      where: { id: parsed.data.id },
+      select: {
+        authorId: true,
+        attachments: { select: { filePath: true } },
+      },
+    });
+    if (!existing) {
+      revalidateBoard();
+      return {};
+    }
+    if (existing.authorId !== user.id) {
+      return { error: "Only the author can delete this comment." };
+    }
+    filePaths = existing.attachments.map((attachment) => attachment.filePath);
+    await prisma.incidentUpdate.delete({ where: { id: parsed.data.id } });
+  } catch {
+    return { error: "Could not delete the comment. Try again." };
+  }
+
+  // Attachment rows cascade with the update; files are best-effort cleanup.
+  if (filePaths.length) {
+    try {
+      const supabase = await createClient();
+      await supabase.storage.from("attachments").remove(filePaths);
+    } catch {}
+  }
+
+  revalidateBoard();
+  return {};
+}
+
 export async function addIncidentAttachment(input: {
   incidentId: string;
   attachment: AttachmentMeta;
@@ -360,6 +448,17 @@ export async function removeIncidentAttachment(input: {
 
   let removed: { incidentId: string; filePath: string; fileName: string };
   try {
+    const existing = await prisma.incidentAttachment.findUnique({
+      where: { id: parsed.data.id },
+      select: { updateId: true, uploaderId: true },
+    });
+    if (!existing) {
+      return { error: "That attachment no longer exists." };
+    }
+    // Description files are shared; files on a comment belong to its author.
+    if (existing.updateId && existing.uploaderId !== user.id) {
+      return { error: "Only the author can remove this file." };
+    }
     removed = await prisma.incidentAttachment.delete({
       where: { id: parsed.data.id },
       select: { incidentId: true, filePath: true, fileName: true },
