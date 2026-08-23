@@ -47,6 +47,8 @@ function greetingFor(hour: number): { label: string; part: keyof typeof daypartI
   return { label: "Good night", part: "night" };
 }
 
+// The greeting depends on the client clock, which the server cannot know:
+// SSR renders just the name and the daypart text/icon mounts after hydration.
 function Greeting({ name }: { name: string }) {
   const [greeting, setGreeting] = useState<ReturnType<typeof greetingFor> | null>(null);
   const firstName = name.split(" ")[0];
@@ -105,6 +107,8 @@ export function UserMenuDropdown({
       menuRef.current?.querySelectorAll<HTMLElement>("[role=menuitem]") ?? [],
     );
 
+  // Focus in an effect: the menu items only exist after the open render
+  // commits (requestAnimationFrame would run too early and drop focus).
   useEffect(() => {
     if (!open || !pendingFocus.current) return;
     const all = items();

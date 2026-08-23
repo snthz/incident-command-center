@@ -1,5 +1,9 @@
 "use client";
 
+// Custom calendar (no native input[type=date]): Monday-first grid, arrow-key
+// navigation that crosses month boundaries, Today/Clear footer. Values are
+// plain yyyy-mm-dd strings — timezone handling happens at the schema layer.
+
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 

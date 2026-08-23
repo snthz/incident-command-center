@@ -89,6 +89,8 @@ export function LiveFeed({
   const [draft, setDraft] = useState({ key: 0, value: "" });
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Attachments arriving over realtime for updates whose server props
+  // don't carry them yet (the refresh lands ~600ms later).
   const [liveAttachments, setLiveAttachments] = useState<
     Map<string, AttachmentItemData[]>
   >(new Map());
@@ -274,6 +276,7 @@ export function LiveFeed({
     };
   }, [incidentId, currentUser.id, router]);
 
+  // Throttled to one broadcast per 1.5s; receivers expire peers after 4s.
   function broadcastTyping(typing: boolean) {
     const channel = channelRef.current;
     if (!channel) return;
@@ -320,6 +323,8 @@ export function LiveFeed({
     setComposerOpen(false);
   }
 
+  // Realtime, server-rendered and optimistic items overlap after a refresh —
+  // merge by id, newest first.
   const seen = new Set<string>();
   const feed = [...realtimeUpdates, ...initialUpdates, ...pendingUpdates]
     .filter((update) => (seen.has(update.id) ? false : (seen.add(update.id), true)))
@@ -345,6 +350,8 @@ export function LiveFeed({
               const id = crypto.randomUUID();
               broadcastTyping(false);
 
+              // Upload before creating the update so the action can link
+              // the attachment rows to it in one write.
               let attachments: AttachmentItemData[] = [];
               if (files.length) {
                 try {

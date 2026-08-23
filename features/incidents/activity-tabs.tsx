@@ -271,6 +271,8 @@ export function ActivityTabs({
         ))}
       </div>
 
+      {/* Both panels stay mounted (hidden via CSS) so the composer draft and
+          the realtime subscriptions survive switching tabs. */}
       <div
         role="tabpanel"
         id={`${baseId}-panel-comments`}

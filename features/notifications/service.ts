@@ -1,6 +1,10 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
+// Notifications and audit events are written here instead of DB triggers:
+// Prisma connects as a privileged role, so auth.uid() can't identify the actor.
+// Every write is non-fatal — a failed side effect must never break the mutation.
+
 export type NotificationType = "update_posted" | "status_changed" | "assigned";
 
 type IncidentRef = {
@@ -31,6 +35,8 @@ export async function notify(input: {
   } catch {}
 }
 
+// Fan-out to owner + watchers, minus the actor. One row per recipient;
+// RLS makes realtime deliver each row only to its own recipient.
 export async function notifyWatchers(input: {
   actorId: string;
   incident: IncidentRef;

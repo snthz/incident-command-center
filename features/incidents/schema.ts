@@ -21,6 +21,8 @@ export const uuidPattern =
 
 export const incidentKeyPattern = /^[a-z]{2,10}-\d{1,6}$/i;
 
+// Filters come from the URL, which anyone can edit: invalid values fall back
+// to undefined via catch() instead of throwing a 500.
 export const incidentFiltersSchema = z.object({
   status: z.enum(IncidentStatus).optional().catch(undefined),
   severity: z.enum(IncidentSeverity).optional().catch(undefined),
@@ -102,6 +104,7 @@ export const createIncidentSchema = z.object({
       z.literal(""),
       z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid due date."),
     ])
+    // Stored at noon UTC so the calendar date never shifts a day in any timezone
     .transform((value) =>
       value === "" ? null : new Date(`${value}T12:00:00Z`),
     ),

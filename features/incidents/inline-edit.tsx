@@ -20,6 +20,7 @@ function IconButton({
     <button
       type="button"
       aria-label={label}
+      // Keeps the edit control from blurring before the click lands
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
       className="flex size-7 items-center justify-center rounded-md border border-line bg-surface-2 text-muted shadow-sm transition-colors hover:text-foreground"
@@ -83,6 +84,8 @@ export function InlineEditable({
       cancel();
       return;
     }
+    // Same Zod schema the server action uses: bad input keeps the field
+    // focused with an inline error, no round-trip.
     const parsed = editIncidentSchema.safeParse({
       id: incidentId,
       [field]: next,
@@ -94,6 +97,8 @@ export function InlineEditable({
     }
     setEditing(false);
     setError(null);
+    // useOptimistic reverts to the last server value automatically when the
+    // transition ends without a successful revalidation.
     startTransition(async () => {
       setOptimisticValue(next);
       const result = await editIncidentText({ id: incidentId, [field]: next });

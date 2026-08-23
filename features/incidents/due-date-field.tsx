@@ -30,6 +30,8 @@ export function DueDateField({
   const [isPending, startTransition] = useTransition();
   const toast = useToast();
 
+  // Compare calendar dates as strings, not timestamps: a due date of *today*
+  // must not flip to overdue mid-morning.
   const now = new Date();
   const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const overdue = optimisticDate !== "" && !resolved && optimisticDate < localToday;

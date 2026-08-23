@@ -31,6 +31,8 @@ export function IncidentFiltersBar({
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Render-phase state adjustment (not an effect): reopen the search as soon
+  // as a ?q= arrives in the URL, e.g. via back/forward or a shared link.
   const [lastAppliedQuery, setLastAppliedQuery] = useState(filters.q);
   if (filters.q !== lastAppliedQuery) {
     setLastAppliedQuery(filters.q);
@@ -128,6 +130,7 @@ export function IncidentFiltersBar({
             <button
               type="button"
               aria-label="Clear search"
+              // preventDefault so the input's blur-collapse doesn't eat the click
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 onSearchChange("");

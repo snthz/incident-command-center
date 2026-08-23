@@ -62,6 +62,8 @@ export function NotificationsPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
 
+  // After a revalidation the same notification arrives via server props AND
+  // realtime — keep the live copy only while the server list lacks it.
   const liveOnly = liveItems.filter(
     (item) => !initialItems.some((existing) => existing.id === item.id),
   );
@@ -73,6 +75,8 @@ export function NotificationsPanel({
       readIds.has(item.id) ||
       (allReadAt !== null && Date.parse(item.createdAt) <= allReadAt),
   }));
+  // The badge counts unread items beyond the listed page too (initialUnread
+  // comes from a server count, the list is capped).
   const listedUnread = items.filter((item) => !item.read).length;
   const hiddenUnread =
     allReadAt !== null
@@ -90,6 +94,8 @@ export function NotificationsPanel({
         setOpen(false);
       }
     };
+    // Document-level Escape: "Mark all as read" can unmount the focused
+    // button, dropping focus to <body> where a local handler would miss it.
     const onDocumentKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);

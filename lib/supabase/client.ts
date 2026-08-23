@@ -14,6 +14,8 @@ export function createClient() {
   return createBrowserClient(config.supabaseUrl, config.supabaseAnonKey);
 }
 
+// setAuth must run before subscribing so RLS applies to the socket from the
+// first frame — otherwise the channel joins as anon and receives nothing.
 export async function createRealtimeClient() {
   const supabase = createClient();
   const {

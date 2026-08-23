@@ -19,6 +19,8 @@ export function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Files go from the browser straight to Storage (the authenticated client):
+// server actions cap request bodies at ~1MB, so only metadata passes through them.
 export async function uploadAttachmentFile(
   file: File,
   incidentId: string,
@@ -84,6 +86,7 @@ export function AttachmentRow({
   const toast = useToast();
   const [opening, setOpening] = useState(false);
 
+  // The bucket is private — downloads go through short-lived signed URLs.
   async function open() {
     if (attachment.pending || opening) return;
     setOpening(true);
@@ -168,6 +171,8 @@ export function DescriptionAttachments({
   const [uploads, setUploads] = useState<AttachmentItemData[]>([]);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
+  // Server list + local uploads, deduped by id: a confirmed upload stays
+  // visible until revalidation delivers the real row in props.
   const serverIds = new Set(attachments.map((item) => item.id));
   const visible = [
     ...attachments.filter((item) => !hiddenIds.has(item.id)),

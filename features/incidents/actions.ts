@@ -368,6 +368,8 @@ export async function removeIncidentAttachment(input: {
     return { error: "Could not remove the attachment. Try again." };
   }
 
+  // Best-effort file cleanup: the metadata row is already gone, an orphaned
+  // object in the bucket is harmless.
   try {
     const supabase = await createClient();
     await supabase.storage.from("attachments").remove([removed.filePath]);
@@ -432,6 +434,8 @@ export async function createIncident(
         orderBy: { position: "asc" },
         select: { position: true },
       });
+      // key and number are omitted on purpose: a BEFORE INSERT trigger
+      // assigns them atomically from the project's counter (CORE-8, PAY-3…).
       return tx.incident.create({
         data: {
           projectId: parsed.data.projectId,

@@ -15,6 +15,8 @@ export function MobileSidebar({ children }: { children: React.ReactNode }) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
+  // Close the drawer when navigation lands — render-phase adjustment,
+  // see react.dev "storing information from previous renders".
   const [lastPathname, setLastPathname] = useState(pathname);
   if (pathname !== lastPathname) {
     setLastPathname(pathname);

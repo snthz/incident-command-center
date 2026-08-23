@@ -8,6 +8,8 @@ import { SidebarContent, SidebarSkeleton } from "@/features/navigation/sidebar";
 import { TeamAvatars } from "@/features/navigation/team-avatars";
 import { NotificationsBell } from "@/features/notifications/bell";
 
+// Everything in this group is personalized per session; this also keeps
+// `next build` from prerendering these pages against the database.
 export const dynamic = "force-dynamic";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

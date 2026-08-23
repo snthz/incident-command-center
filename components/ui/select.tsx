@@ -47,6 +47,10 @@ type SelectProps = {
   searchPlaceholder?: string;
 };
 
+// Custom combobox/listbox following the APG pattern: arrow/Home/End
+// navigation, Escape returns focus to the trigger, aria-activedescendant
+// tracks the highlight. `searchable` filters options by label + description;
+// `iconOnly` renders a compact trigger for filter bars.
 export function Select({
   options,
   value,
