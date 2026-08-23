@@ -95,6 +95,10 @@ export const getIncident = cache(async (key: string) => {
         include: { profile: { select: { id: true, name: true } } },
         orderBy: { createdAt: "asc" },
       },
+      attachments: {
+        where: { updateId: null },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 });
@@ -143,7 +147,10 @@ export async function getIncidentUpdates(incidentId: string) {
 
   return prisma.incidentUpdate.findMany({
     where: { incidentId },
-    include: { author: true },
+    include: {
+      author: true,
+      attachments: { orderBy: { createdAt: "asc" } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }

@@ -87,6 +87,18 @@ function eventSentence(event: ActivityEvent) {
       );
     case "description_edited":
       return <>updated the description</>;
+    case "attachment_added":
+      return (
+        <>
+          attached <Strong>{event.toValue}</Strong>
+        </>
+      );
+    case "attachment_removed":
+      return (
+        <>
+          removed attachment <Strong>{event.fromValue}</Strong>
+        </>
+      );
     default:
       return <>updated the incident</>;
   }

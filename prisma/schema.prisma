@@ -82,6 +82,7 @@ model Profile {
   memberships           OrganizationMember[]
   watching              IncidentWatcher[]
   incidentEvents        IncidentEvent[]
+  attachments           IncidentAttachment[]
 
   @@map("profiles")
 }
@@ -137,6 +138,7 @@ model Incident {
   notifications Notification[]
   watchers      IncidentWatcher[]
   events        IncidentEvent[]
+  attachments   IncidentAttachment[]
 
   @@unique([projectId, number])
 
@@ -153,11 +155,32 @@ model IncidentUpdate {
   message    String
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  author   Profile? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  incident    Incident             @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author      Profile?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  attachments IncidentAttachment[]
 
   @@index([incidentId, createdAt])
   @@map("incident_updates")
+}
+
+model IncidentAttachment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  incidentId String   @map("incident_id") @db.Uuid
+  updateId   String?  @map("update_id") @db.Uuid
+  uploaderId String   @map("uploader_id") @db.Uuid
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  mimeType   String   @map("mime_type")
+  sizeBytes  BigInt   @map("size_bytes")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  incident Incident        @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  update   IncidentUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  uploader Profile         @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+  @@index([updateId])
+  @@map("incident_attachments")
 }
 
 model Notification {

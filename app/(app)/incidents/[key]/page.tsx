@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { requireUser } from "@/lib/dal";
 import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
+import { DescriptionAttachments } from "@/features/incidents/attachments";
 import { SeverityBadge } from "@/features/incidents/badges";
 import { DueDateField } from "@/features/incidents/due-date-field";
 import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
@@ -105,6 +106,17 @@ export default async function IncidentDetailPage({ params }: PageProps<"/inciden
               />
             </div>
           </section>
+
+          <DescriptionAttachments
+            incidentId={incident.id}
+            attachments={incident.attachments.map((attachment) => ({
+              id: attachment.id,
+              fileName: attachment.fileName,
+              filePath: attachment.filePath,
+              mimeType: attachment.mimeType,
+              sizeBytes: Number(attachment.sizeBytes),
+            }))}
+          />
 
           <section aria-label="Activity" className="min-w-0">
             <h2 className="mb-4 text-sm font-semibold text-foreground">Activity</h2>

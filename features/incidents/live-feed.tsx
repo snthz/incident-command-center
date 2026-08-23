@@ -14,12 +14,22 @@ import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import { createRealtimeClient } from "@/lib/supabase/client";
 import { postIncidentUpdate } from "./actions";
+import {
+  AttachmentRow,
+  PaperclipIcon,
+  formatBytes,
+  uploadAttachmentFile,
+  validateAttachment,
+  type AttachmentItemData,
+} from "./attachments";
+import { MAX_ATTACHMENTS_PER_POST } from "./schema";
 
 export type FeedUpdate = {
   id: string;
   message: string;
   createdAt: Date;
   author: { id: string; name: string } | null;
+  attachments?: AttachmentItemData[];
   pending?: boolean;
 };
 
@@ -77,6 +87,11 @@ export function LiveFeed({
   const [typingPeers, setTypingPeers] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [draft, setDraft] = useState({ key: 0, value: "" });
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [liveAttachments, setLiveAttachments] = useState<
+    Map<string, AttachmentItemData[]>
+  >(new Map());
   const [realtimeUpdates, setRealtimeUpdates] = useState<FeedUpdate[]>([]);
   const [connection, setConnection] = useState<LiveConnectionState>("connecting");
   const [announcement, setAnnouncement] = useState("");
@@ -158,6 +173,55 @@ export function LiveFeed({
           }
         },
       )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "incident_attachments",
+            filter: `incident_id=eq.${incidentId}`,
+          },
+          (payload) => {
+            const row = payload.new as {
+              id: string;
+              update_id: string | null;
+              file_name: string;
+              file_path: string;
+              mime_type: string;
+              size_bytes: number;
+            };
+            if (row.update_id) {
+              const updateId = row.update_id;
+              setLiveAttachments((current) => {
+                const existing = current.get(updateId) ?? [];
+                if (existing.some((item) => item.id === row.id)) return current;
+                const next = new Map(current);
+                next.set(updateId, [
+                  ...existing,
+                  {
+                    id: row.id,
+                    fileName: row.file_name,
+                    filePath: row.file_path,
+                    mimeType: row.mime_type,
+                    sizeBytes: Number(row.size_bytes),
+                  },
+                ]);
+                return next;
+              });
+            }
+            scheduleRefresh();
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table: "incident_attachments",
+            filter: `incident_id=eq.${incidentId}`,
+          },
+          scheduleRefresh,
+        )
         .on("broadcast", { event: "typing" }, (message) => {
           const { userId, typing } = message.payload as {
             userId: string;
@@ -280,42 +344,139 @@ export function LiveFeed({
               if (!message) return;
               const id = crypto.randomUUID();
               broadcastTyping(false);
+
+              let attachments: AttachmentItemData[] = [];
+              if (files.length) {
+                try {
+                  const metas = await Promise.all(
+                    files.map((file) => uploadAttachmentFile(file, incidentId)),
+                  );
+                  attachments = metas.map((meta) => ({
+                    ...meta,
+                    id: crypto.randomUUID(),
+                  }));
+                } catch {
+                  toast.push("error", "Could not upload the attachments. Try again.");
+                  return;
+                }
+              }
+
               formRef.current?.reset();
               addPendingUpdate({
                 id,
                 message,
                 createdAt: new Date(),
                 author: currentUser,
+                attachments,
                 pending: true,
               });
-              const result = await postIncidentUpdate({ id, incidentId, message });
+              const result = await postIncidentUpdate({
+                id,
+                incidentId,
+                message,
+                attachments: attachments.map((attachment) => ({
+                  fileName: attachment.fileName,
+                  filePath: attachment.filePath,
+                  mimeType: attachment.mimeType,
+                  sizeBytes: attachment.sizeBytes,
+                })),
+              });
               if (result.error) {
                 setDraft((current) => ({ key: current.key + 1, value: message }));
                 toast.push("error", result.error);
               } else {
                 setDraft((current) => ({ key: current.key + 1, value: "" }));
+                setFiles([]);
                 setComposerOpen(false);
               }
             }}
           >
-            <Textarea
-              key={draft.key}
-              ref={textareaRef}
-              defaultValue={draft.value}
-              id="update-message"
-              name="message"
-              aria-label="Add a comment"
-              required
-              maxLength={2000}
-              placeholder="Share progress, findings or next steps…"
-              onChange={() => broadcastTyping(true)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  cancelComposer();
-                }
-              }}
-            />
+            <div className="relative">
+              <Textarea
+                key={draft.key}
+                ref={textareaRef}
+                defaultValue={draft.value}
+                id="update-message"
+                name="message"
+                aria-label="Add a comment"
+                required
+                maxLength={2000}
+                placeholder="Share progress, findings or next steps…"
+                className="pb-10"
+                onChange={() => broadcastTyping(true)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    cancelComposer();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                aria-label="Attach files"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-2 left-2 flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-white/5 hover:text-neutral-200"
+              >
+                <PaperclipIcon />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                hidden
+                aria-label="Attach files to the comment"
+                onChange={(event) => {
+                  const selected = Array.from(event.target.files ?? []);
+                  event.target.value = "";
+                  setFiles((current) => {
+                    const next = [...current];
+                    for (const file of selected) {
+                      if (next.length >= MAX_ATTACHMENTS_PER_POST) {
+                        toast.push("error", `Up to ${MAX_ATTACHMENTS_PER_POST} files per comment`);
+                        break;
+                      }
+                      const invalid = validateAttachment(file);
+                      if (invalid) {
+                        toast.push("error", invalid);
+                        continue;
+                      }
+                      next.push(file);
+                    }
+                    return next;
+                  });
+                }}
+              />
+            </div>
+            {files.length ? (
+              <ul aria-label="Files to attach" className="flex flex-col gap-1.5">
+                {files.map((file, index) => (
+                  <li
+                    key={`${file.name}-${index}`}
+                    className="flex items-center gap-2 rounded-md border border-line bg-surface-2/40 px-2.5 py-1.5 text-sm"
+                  >
+                    <PaperclipIcon className="size-3.5 shrink-0 text-muted" />
+                    <span className="min-w-0 flex-1 truncate text-neutral-200">
+                      {file.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted">
+                      {formatBytes(file.size)}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${file.name}`}
+                      onClick={() =>
+                        setFiles((current) => current.filter((_, i) => i !== index))
+                      }
+                      className="flex size-5 shrink-0 items-center justify-center rounded text-muted transition-colors hover:bg-white/5 hover:text-neutral-200"
+                    >
+                      <svg aria-hidden viewBox="0 0 12 12" className="size-2.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                        <path d="m2.5 2.5 7 7m0-7-7 7" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <div className="flex items-center gap-1">
               <SubmitButton />
               <Button type="button" variant="ghost" onClick={cancelComposer}>
@@ -407,6 +568,23 @@ export function LiveFeed({
                 <p className="text-sm leading-relaxed text-neutral-300">
                   {update.message}
                 </p>
+                {(() => {
+                  const attachments = update.attachments?.length
+                    ? update.attachments
+                    : liveAttachments.get(update.id);
+                  if (!attachments?.length) return null;
+                  return (
+                    <ul aria-label="Attachments" className="mt-1 flex max-w-md flex-col gap-1.5">
+                      {attachments.map((attachment) => (
+                        <AttachmentRow
+                          key={attachment.id}
+                          attachment={attachment}
+                          compact
+                        />
+                      ))}
+                    </ul>
+                  );
+                })()}
               </div>
             </li>
           ))}

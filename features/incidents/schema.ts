@@ -53,10 +53,32 @@ export const moveIncidentSchema = z.object({
   status: z.enum(IncidentStatus),
 });
 
+export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+export const MAX_ATTACHMENTS_PER_POST = 5;
+
+export const attachmentMetaSchema = z.object({
+  fileName: z.string().trim().min(1).max(255),
+  filePath: z.string().min(1).max(500),
+  mimeType: z.string().min(1).max(150),
+  sizeBytes: z.number().int().min(0).max(MAX_ATTACHMENT_BYTES),
+});
+
+export type AttachmentMeta = z.infer<typeof attachmentMetaSchema>;
+
 export const postUpdateSchema = z.object({
   id: z.string().regex(uuidPattern),
   incidentId: z.string().regex(uuidPattern),
   message: z.string().trim().min(1).max(2000),
+  attachments: z.array(attachmentMetaSchema).max(MAX_ATTACHMENTS_PER_POST).optional(),
+});
+
+export const addAttachmentSchema = z.object({
+  incidentId: z.string().regex(uuidPattern),
+  attachment: attachmentMetaSchema,
+});
+
+export const removeAttachmentSchema = z.object({
+  id: z.string().regex(uuidPattern),
 });
 
 export const createIncidentSchema = z.object({

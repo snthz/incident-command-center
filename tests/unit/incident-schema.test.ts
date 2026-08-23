@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  attachmentMetaSchema,
   createIncidentSchema,
   editIncidentSchema,
   incidentKeyPattern,
+  MAX_ATTACHMENT_BYTES,
   parseDashboardView,
   parseIncidentFilters,
   postUpdateSchema,
@@ -127,6 +129,33 @@ describe("editIncidentSchema", () => {
 describe("setDueDateSchema", () => {
   it("clears the due date with an empty string", () => {
     expect(setDueDateSchema.parse({ id: uuid, dueDate: "" }).dueDate).toBeNull();
+  });
+});
+
+describe("attachments", () => {
+  const meta = {
+    fileName: "pricing-page-design.pdf",
+    filePath: "incident-1/abc-pricing-page-design.pdf",
+    mimeType: "application/pdf",
+    sizeBytes: 2048,
+  };
+
+  it("accepts a valid attachment and enforces the 10 MB cap", () => {
+    expect(attachmentMetaSchema.safeParse(meta).success).toBe(true);
+    expect(
+      attachmentMetaSchema.safeParse({ ...meta, sizeBytes: MAX_ATTACHMENT_BYTES + 1 })
+        .success,
+    ).toBe(false);
+  });
+
+  it("caps attachments per update at five", () => {
+    const base = { id: uuid, incidentId: uuid, message: "With files." };
+    expect(
+      postUpdateSchema.safeParse({ ...base, attachments: Array(5).fill(meta) }).success,
+    ).toBe(true);
+    expect(
+      postUpdateSchema.safeParse({ ...base, attachments: Array(6).fill(meta) }).success,
+    ).toBe(false);
   });
 });
 

@@ -11,15 +11,19 @@ import {
   notifyWatchers,
   removeWatcher,
 } from "@/features/notifications/service";
+import { createClient } from "@/lib/supabase/server";
 import {
+  addAttachmentSchema,
   assignIncidentSchema,
   createIncidentSchema,
   editIncidentSchema,
   moveIncidentSchema,
   postUpdateSchema,
+  removeAttachmentSchema,
   reorderIncidentSchema,
   setDueDateSchema,
   watchIncidentSchema,
+  type AttachmentMeta,
 } from "./schema";
 import { z } from "zod";
 
@@ -241,6 +245,7 @@ export async function postIncidentUpdate(input: {
   id: string;
   incidentId: string;
   message: string;
+  attachments?: AttachmentMeta[];
 }): Promise<{ error?: string }> {
   const user = await getUser();
   if (!user) {
@@ -269,6 +274,20 @@ export async function postIncidentUpdate(input: {
       },
     });
     incident = created.incident;
+
+    if (parsed.data.attachments?.length) {
+      await prisma.incidentAttachment.createMany({
+        data: parsed.data.attachments.map((attachment) => ({
+          incidentId: parsed.data.incidentId,
+          updateId: parsed.data.id,
+          uploaderId: user.id,
+          fileName: attachment.fileName,
+          filePath: attachment.filePath,
+          mimeType: attachment.mimeType,
+          sizeBytes: attachment.sizeBytes,
+        })),
+      });
+    }
   } catch {
     return { error: "Could not post the update. Try again." };
   }
@@ -278,6 +297,87 @@ export async function postIncidentUpdate(input: {
     actorId: user.id,
     incident,
     type: "update_posted",
+  });
+
+  revalidateBoard();
+  return {};
+}
+
+export async function addIncidentAttachment(input: {
+  incidentId: string;
+  attachment: AttachmentMeta;
+}): Promise<{ error?: string; id?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = addAttachmentSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "That file is not valid." };
+  }
+
+  let created: { id: string };
+  try {
+    created = await prisma.incidentAttachment.create({
+      data: {
+        incidentId: parsed.data.incidentId,
+        uploaderId: user.id,
+        fileName: parsed.data.attachment.fileName,
+        filePath: parsed.data.attachment.filePath,
+        mimeType: parsed.data.attachment.mimeType,
+        sizeBytes: parsed.data.attachment.sizeBytes,
+      },
+      select: { id: true },
+    });
+  } catch {
+    return { error: "Could not attach the file. Try again." };
+  }
+
+  await logEvent({
+    incidentId: parsed.data.incidentId,
+    actorId: user.id,
+    type: "attachment_added",
+    toValue: parsed.data.attachment.fileName,
+  });
+
+  revalidateBoard();
+  return { id: created.id };
+}
+
+export async function removeIncidentAttachment(input: {
+  id: string;
+}): Promise<{ error?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { error: SESSION_EXPIRED };
+  }
+
+  const parsed = removeAttachmentSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "That attachment is not valid." };
+  }
+
+  let removed: { incidentId: string; filePath: string; fileName: string };
+  try {
+    removed = await prisma.incidentAttachment.delete({
+      where: { id: parsed.data.id },
+      select: { incidentId: true, filePath: true, fileName: true },
+    });
+  } catch {
+    return { error: "Could not remove the attachment. Try again." };
+  }
+
+  try {
+    const supabase = await createClient();
+    await supabase.storage.from("attachments").remove([removed.filePath]);
+  } catch {}
+
+  await logEvent({
+    incidentId: removed.incidentId,
+    actorId: user.id,
+    type: "attachment_removed",
+    fromValue: removed.fileName,
   });
 
   revalidateBoard();

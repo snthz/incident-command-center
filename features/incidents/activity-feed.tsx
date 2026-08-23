@@ -28,6 +28,13 @@ export async function ActivityFeed({ incidentId }: { incidentId: string }) {
         author: update.author
           ? { id: update.author.id, name: update.author.name }
           : null,
+        attachments: update.attachments.map((attachment) => ({
+          id: attachment.id,
+          fileName: attachment.fileName,
+          filePath: attachment.filePath,
+          mimeType: attachment.mimeType,
+          sizeBytes: Number(attachment.sizeBytes),
+        })),
       }))}
       initialEvents={events.map((event) => ({
         id: event.id,

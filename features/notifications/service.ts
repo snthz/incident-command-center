@@ -64,7 +64,9 @@ export type IncidentEventType =
   | "assignee_changed"
   | "due_date_changed"
   | "title_edited"
-  | "description_edited";
+  | "description_edited"
+  | "attachment_added"
+  | "attachment_removed";
 
 export async function logEvent(input: {
   incidentId: string;
