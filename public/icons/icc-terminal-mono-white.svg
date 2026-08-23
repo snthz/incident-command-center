@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- MONO WHITE — sin contenedor, para fondos oscuros donde el naranja no aplica -->
+  <g transform="translate(96,100)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-32,-28 L0,0 L-32,28" fill="none" stroke="#ffffff" stroke-width="13"/>
+    <rect x="14" y="16" width="36" height="13" rx="6.5" fill="#ffffff"/>
+  </g>
+</svg>

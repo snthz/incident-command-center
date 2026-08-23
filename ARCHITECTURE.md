@@ -85,6 +85,8 @@ Supabase Auth with SSR cookies (`@supabase/ssr`), verified in two layers:
 
 Sessions survive refreshes via cookies; the proxy transparently refreshes expired access tokens.
 
+There is deliberately **no self-service registration**: an incident tool is membership-driven, so user provisioning is seed/invite-based — an open sign-up would create orphan accounts with no organization, projects, or team. The login page instead surfaces the demo accounts so reviewers can explore instantly, including the multi-user realtime behavior with two browsers side by side.
+
 ## 6. Caching and invalidation decisions
 
 | Content | Strategy | Invalidation |

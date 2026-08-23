@@ -10,7 +10,7 @@ export function Logo({
   return (
     <span className="flex items-center gap-3">
       <Image
-        src="/icons/icc-isotipo-dark.svg"
+        src="/icons/icc-terminal-isotipo.svg"
         alt=""
         width={size}
         height={size}

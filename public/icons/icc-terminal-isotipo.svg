@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- ISOTIPO — Terminal Prompt -->
+  <g transform="translate(100,100)" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-72" y="-72" width="144" height="144" rx="32" fill="#1a1a1a" stroke="#2e2e2e" stroke-width="2.5"/>
+    <!-- grupo prompt centrado ópticamente (desplazado -4 para compensar el peso del cursor) -->
+    <g transform="translate(-4,0)">
+      <path d="M-32,-28 L0,0 L-32,28" fill="none" stroke="#f2f2f2" stroke-width="13"/>
+      <rect x="14" y="16" width="36" height="13" rx="6.5" fill="#ff6b35"/>
+    </g>
+  </g>
+</svg>

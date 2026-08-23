@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { DemoUsers } from "@/features/auth/demo-users";
 import { LoginForm } from "@/features/auth/login-form";
-import { Logo } from "@/features/branding/logo";
 
 export const metadata: Metadata = { title: "Sign in — Incident Command Center" };
 
@@ -11,52 +10,42 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const redirectTo = typeof params.redirectTo === "string" ? params.redirectTo : undefined;
 
   return (
-    <main className="flex flex-1">
-      {/* Form panel */}
-      <div className="flex w-full flex-col bg-surface lg:w-120 xl:w-130">
-        <header className="px-6 py-6 lg:px-8">
-          <Logo />
-        </header>
-
-        <div className="flex flex-1 items-center justify-center px-6 lg:px-8">
-          <div className="w-full max-w-sm">
-            <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
-            <p className="mb-8 mt-1 text-sm text-muted">
-              Sign in to monitor and coordinate active incidents.
-            </p>
-            <LoginForm redirectTo={redirectTo} />
-          </div>
+    <main className="flex flex-1 flex-col items-center bg-background px-6 py-10">
+      <div className="flex w-full max-w-sm flex-1 flex-col justify-center py-8">
+        <div className="flex flex-col items-center text-center">
+          <Image
+            src="/icons/icc-terminal-isotipo.svg"
+            alt=""
+            width={52}
+            height={52}
+            priority
+          />
+          <h1 className="mt-6 text-2xl font-semibold text-foreground">
+            Welcome back
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">
+            Sign in to Incident Command Center
+          </p>
         </div>
 
-        <footer className="px-6 py-6 lg:px-8">
-          <div className="mx-auto w-full max-w-sm">
-            <DemoUsers />
-          </div>
-        </footer>
+        <div className="mt-10">
+          <LoginForm redirectTo={redirectTo} />
+        </div>
+
+        <div className="mt-10 flex items-center gap-3" aria-hidden>
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs text-muted">or explore with a demo account</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+
+        <div className="mt-4">
+          <DemoUsers />
+        </div>
       </div>
 
-      {/* Quote panel */}
-      <aside className="hidden flex-1 items-center justify-center border-l border-line bg-background p-12 lg:flex">
-        <figure className="max-w-xl">
-          <span aria-hidden className="select-none font-serif text-7xl leading-none text-neutral-700">
-            &ldquo;
-          </span>
-          <blockquote className="mt-2 text-2xl leading-relaxed text-foreground">
-            When everything is on fire, the team that sees the same picture first
-            wins. One shared timeline beats a hundred scattered pings.
-          </blockquote>
-          <figcaption className="mt-6 flex items-center gap-3">
-            <Image
-              src="/icons/icc-favicon.svg"
-              alt=""
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-sm text-muted">@icc-oncall</span>
-          </figcaption>
-        </figure>
-      </aside>
+      <p className="pt-6 text-xs text-muted">
+        Access is invite-based — no sign-up required.
+      </p>
     </main>
   );
 }
