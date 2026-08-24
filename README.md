@@ -89,6 +89,7 @@ No service-role or secret keys are used anywhere in the app. See [.env.example](
 | `bun run test` | Vitest suite (unit + component) |
 | `bun run test:watch` | Vitest in watch mode |
 | `bun run lint` | ESLint |
+| `bun run typecheck` | Generates route types (`next typegen`), then `tsc --noEmit` |
 | `bun run db:start` | Start local Supabase |
 | `bun run db:reset` | Recreate schema from `supabase/migrations` + seed |
 
@@ -98,7 +99,7 @@ No service-role or secret keys are used anywhere in the app. See [.env.example](
 bun run test
 ```
 
-CI runs `lint`, `tsc --noEmit` and this suite on every push to `main`; the Docker image is only built if all three pass.
+CI runs `lint`, `typecheck` and this suite on every push to `main`; the Docker image is only built if all three pass.
 
 Two Vitest projects:
 
