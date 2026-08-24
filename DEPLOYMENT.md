@@ -37,6 +37,20 @@ to disable seeding.
 Locally the Supabase CLI stays the source of truth (`bun run db:reset`); the
 runtime migrator is only for deployed environments.
 
+## GitHub environment
+
+The `deploy` job declares `environment: production`, so every run records a
+deployment and GitHub shows the Deployments/Environments panel on the repo page
+with its history. To make the entry link to the live site, add a repository
+**variable** (not a secret — it is a public URL) under
+*Settings → Secrets and variables → Actions → Variables*:
+
+| Variable | Value |
+|---|---|
+| `APP_URL` | `https://icc.yourdomain.com` |
+
+Without it the environment still appears, just without the clickable link.
+
 ## 3. App service
 
 1. Dokploy → **Create Service → Application**, source = **Docker** image

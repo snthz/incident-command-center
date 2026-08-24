@@ -55,6 +55,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Its own job so GitHub records a deployment against the environment,
+  # which is what surfaces the repo's Deployments panel and the live link.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    steps:
       - name: Trigger Dokploy redeploy
         env:
           WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK_URL }}
