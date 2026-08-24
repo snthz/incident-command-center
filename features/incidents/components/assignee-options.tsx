@@ -1,5 +1,5 @@
 import type { SelectOption } from "@/components/ui/select";
-import type { ProfileOption } from "./queries";
+import type { ProfileOption } from "../queries";
 
 function initialsOf(name: string) {
   return name

@@ -3,7 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
-import { toggleWatchIncident } from "./actions";
+import { toggleWatchIncident } from "../actions";
 
 export function WatchButton({
   incidentId,

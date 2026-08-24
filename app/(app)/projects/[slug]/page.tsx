@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/dal";
-import { IncidentsView } from "@/features/incidents/incidents-view";
+import { IncidentsView } from "@/features/incidents/components/incidents-view";
 import { getProject } from "@/features/incidents/queries";
 
 export async function generateMetadata({

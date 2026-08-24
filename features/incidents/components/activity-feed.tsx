@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUser } from "@/lib/dal";
 import { ActivityTabs } from "./activity-tabs";
-import { getIncidentEvents, getIncidentUpdates } from "./queries";
+import { getIncidentEvents, getIncidentUpdates } from "../queries";
 
 export async function ActivityFeed({ incidentId }: { incidentId: string }) {
   const [updates, events, user] = await Promise.all([

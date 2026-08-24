@@ -98,6 +98,8 @@ No service-role or secret keys are used anywhere in the app. See [.env.example](
 bun run test
 ```
 
+CI runs `lint`, `tsc --noEmit` and this suite on every push to `main`; the Docker image is only built if all three pass.
+
 Two Vitest projects:
 
 - **`tests/unit`** (Node) — auth gate redirects in `proxy.ts` (redirect targets, `redirectTo` preservation, public routes), Zod schemas (filter parsing that drops invalid URL params, incident creation, the noon-UTC due-date normalization), and timezone-stable date formatting.
@@ -116,6 +118,7 @@ features/             Feature modules: auth, incidents, notifications, navigatio
   */schema.ts         Zod schemas shared by forms and server actions
   */actions.ts        Server actions (mutations)
   */queries.ts        Server-only data access (Prisma)
+  */components/       Feature UI, split out once a feature outgrows a flat list
 lib/                  DAL (auth), Prisma client, Supabase clients, dates
 prisma/               Prisma schema (client generated to lib/generated)
 supabase/             Migrations, seed, local config

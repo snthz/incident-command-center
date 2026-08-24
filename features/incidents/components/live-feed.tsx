@@ -18,7 +18,7 @@ import {
   editIncidentUpdate,
   postIncidentUpdate,
   removeIncidentAttachment,
-} from "./actions";
+} from "../actions";
 import {
   AttachmentRow,
   PaperclipIcon,
@@ -27,7 +27,7 @@ import {
   validateAttachment,
   type AttachmentItemData,
 } from "./attachments";
-import { MAX_ATTACHMENTS_PER_POST } from "./schema";
+import { MAX_ATTACHMENTS_PER_POST } from "../schema";
 
 export type FeedUpdate = {
   id: string;

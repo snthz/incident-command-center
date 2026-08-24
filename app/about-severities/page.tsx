@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/features/branding/logo";
-import { SeverityBadge, StatusBadge } from "@/features/incidents/badges";
+import { SeverityBadge, StatusBadge } from "@/features/incidents/components/badges";
 import type {
   IncidentSeverity,
   IncidentStatus,

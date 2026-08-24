@@ -11,11 +11,11 @@ import {
   getProfiles,
   getRecentlyResolved,
   type ProjectItem,
-} from "./queries";
+} from "../queries";
 import {
   parseDashboardView,
   parseIncidentFilters,
-} from "./schema";
+} from "../schema";
 import { SeverityStats, SeverityStatsSkeleton } from "./severity-stats";
 import { ViewToggle } from "./view-toggle";
 

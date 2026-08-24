@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { IncidentFiltersBar } from "@/features/incidents/filters";
+import { IncidentFiltersBar } from "@/features/incidents/components/filters";
 
 const replace = vi.fn();
 let currentParams = new URLSearchParams();

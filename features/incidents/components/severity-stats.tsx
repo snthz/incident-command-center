@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getSeverityStats } from "./queries";
-import { severityValues, type DashboardView } from "./schema";
+import { getSeverityStats } from "../queries";
+import { severityValues, type DashboardView } from "../schema";
 
 const severityAccents: Record<string, string> = {
   critical: "text-red-300",

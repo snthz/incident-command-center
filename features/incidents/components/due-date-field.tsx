@@ -4,7 +4,7 @@ import { useOptimistic, useTransition } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
-import { setIncidentDueDate } from "./actions";
+import { setIncidentDueDate } from "../actions";
 
 function formatDisplay(iso: string) {
   return new Intl.DateTimeFormat("en-US", {

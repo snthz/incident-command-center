@@ -4,17 +4,17 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { requireUser } from "@/lib/dal";
-import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/activity-feed";
-import { DescriptionAttachments } from "@/features/incidents/attachments";
-import { SeverityBadge } from "@/features/incidents/badges";
-import { DueDateField } from "@/features/incidents/due-date-field";
-import { FeedErrorBoundary } from "@/features/incidents/feed-error-boundary";
-import { InlineEditable } from "@/features/incidents/inline-edit";
-import { OwnerSelect } from "@/features/incidents/owner-select";
+import { ActivityFeed, ActivityFeedSkeleton } from "@/features/incidents/components/activity-feed";
+import { DescriptionAttachments } from "@/features/incidents/components/attachments";
+import { SeverityBadge } from "@/features/incidents/components/badges";
+import { DueDateField } from "@/features/incidents/components/due-date-field";
+import { FeedErrorBoundary } from "@/features/incidents/components/feed-error-boundary";
+import { InlineEditable } from "@/features/incidents/components/inline-edit";
+import { OwnerSelect } from "@/features/incidents/components/owner-select";
+import { StatusSelect } from "@/features/incidents/components/status-select";
+import { WatchButton } from "@/features/incidents/components/watch-button";
 import { getIncident, getProfiles } from "@/features/incidents/queries";
 import { incidentKeyPattern } from "@/features/incidents/schema";
-import { StatusSelect } from "@/features/incidents/status-select";
-import { WatchButton } from "@/features/incidents/watch-button";
 
 export async function generateMetadata({
   params,

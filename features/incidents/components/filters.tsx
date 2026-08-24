@@ -11,7 +11,7 @@ import {
   statusLabels,
   statusValues,
   type IncidentFilters,
-} from "./schema";
+} from "../schema";
 
 const SEARCH_DEBOUNCE_MS = 300;
 

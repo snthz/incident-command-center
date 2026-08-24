@@ -6,7 +6,7 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { cn } from "@/lib/cn";
 import { createRealtimeClient } from "@/lib/supabase/client";
 import { LiveFeed, type FeedUpdate } from "./live-feed";
-import { statusLabels } from "./schema";
+import { statusLabels } from "../schema";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
 
 export type ActivityEvent = {

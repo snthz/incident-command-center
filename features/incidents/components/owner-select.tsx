@@ -3,9 +3,9 @@
 import { useOptimistic, useTransition } from "react";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toaster";
-import { assignIncident } from "./actions";
+import { assignIncident } from "../actions";
 import { assigneeOptions } from "./assignee-options";
-import type { ProfileOption } from "./queries";
+import type { ProfileOption } from "../queries";
 
 export function OwnerSelect({
   incidentId,

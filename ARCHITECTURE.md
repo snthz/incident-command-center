@@ -131,12 +131,12 @@ No global state library — each kind of state lives in the smallest tool that o
 - **No pagination or virtualization.** Boards, feeds, and the audit log load fully; fine for hundreds of incidents, not thousands.
 - **Authorization is membership-level.** The admin role is displayed but not yet enforced as a permission boundary; any member can edit any incident.
 - **Realtime reconnection is delegated** to supabase-js defaults (retry with backoff). There is no offline mutation queue; the live badge reflects connection state but pending edits during an outage fail rather than queue.
-- **The E2E flows were verified with Playwright scripts** during development, but only the Vitest suite ships in the repo and there is no CI test gate yet.
+- **The E2E flows were verified with Playwright scripts** during development, but only the Vitest suite ships in the repo — CI runs lint, `tsc` and Vitest before the image is built, yet nothing exercises a real browser there.
 - **Artificial streaming delays** (§3) are still in place for demonstrability.
 
 ## 10. What I would improve with more time
 
-1. **CI pipeline** running lint, `tsc`, Vitest, and a committed Playwright E2E suite (multi-context realtime tests included) before the Docker build.
+1. **Committed Playwright E2E suite** (multi-context realtime tests included) wired into the existing CI gate, which today runs lint, `tsc` and Vitest before the Docker image is built.
 2. **Cursor-based pagination + virtualized lists** for feeds and boards, and moving dashboard filtering server-side behind an index once data grows.
 3. **Role-based authorization** enforced in server actions and RLS (admin vs. member), plus per-project membership.
 4. **Presence** (who is viewing this incident) via Supabase presence channels, and draft preservation for unsent updates.

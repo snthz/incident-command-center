@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import { createClient } from "@/lib/supabase/client";
-import { addIncidentAttachment, removeIncidentAttachment } from "./actions";
-import { MAX_ATTACHMENT_BYTES, type AttachmentMeta } from "./schema";
+import { addIncidentAttachment, removeIncidentAttachment } from "../actions";
+import { MAX_ATTACHMENT_BYTES, type AttachmentMeta } from "../schema";
 
 export type AttachmentItemData = AttachmentMeta & {
   id: string;

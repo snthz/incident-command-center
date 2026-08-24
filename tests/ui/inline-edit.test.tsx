@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editIncidentText } from "@/features/incidents/actions";
-import { InlineEditable } from "@/features/incidents/inline-edit";
+import { InlineEditable } from "@/features/incidents/components/inline-edit";
 
 const push = vi.fn();
 

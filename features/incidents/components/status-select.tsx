@@ -4,8 +4,8 @@ import { useOptimistic, useTransition } from "react";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toaster";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
-import { updateIncidentStatus } from "./actions";
-import { statusLabels, statusValues } from "./schema";
+import { updateIncidentStatus } from "../actions";
+import { statusLabels, statusValues } from "../schema";
 
 export function StatusSelect({
   incidentId,

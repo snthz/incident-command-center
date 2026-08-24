@@ -7,10 +7,10 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TextField } from "@/components/ui/text-field";
 import { useToast } from "@/components/ui/toaster";
-import { createIncident, type CreateIncidentState } from "./actions";
+import { createIncident, type CreateIncidentState } from "../actions";
 import { assigneeOptions } from "./assignee-options";
-import type { ProfileOption, ProjectItem } from "./queries";
-import { severityLabels, severityValues } from "./schema";
+import type { ProfileOption, ProjectItem } from "../queries";
+import { severityLabels, severityValues } from "../schema";
 
 function projectOptions(projects: ProjectItem[]) {
   return projects.map((project) => ({

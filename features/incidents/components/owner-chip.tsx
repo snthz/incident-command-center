@@ -1,4 +1,4 @@
-import type { IncidentListItem } from "./queries";
+import type { IncidentListItem } from "../queries";
 
 export function OwnerChip({ owner }: { owner: IncidentListItem["owner"] }) {
   if (!owner) {

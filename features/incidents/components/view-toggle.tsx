@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
-import type { DashboardView, IncidentFilters } from "./schema";
+import type { DashboardView, IncidentFilters } from "../schema";
 
 const boardIcon = (
   <svg aria-hidden viewBox="0 0 14 14" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">

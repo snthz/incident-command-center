@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/dal";
-import { IncidentsView } from "@/features/incidents/incidents-view";
+import { IncidentsView } from "@/features/incidents/components/incidents-view";
 
 export const metadata: Metadata = { title: "Overview — Incident Command Center" };
 

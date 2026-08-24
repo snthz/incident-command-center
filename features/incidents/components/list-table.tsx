@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { SeverityBadge, StatusLabel } from "./badges";
 import { OwnerChip } from "./owner-chip";
-import type { IncidentListItem } from "./queries";
+import type { IncidentListItem } from "../queries";
 
 export function IncidentListTable({ incidents }: { incidents: IncidentListItem[] }) {
   if (incidents.length === 0) {

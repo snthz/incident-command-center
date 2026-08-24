@@ -7,10 +7,10 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
 import type { IncidentStatus } from "@/lib/generated/prisma/enums";
-import { reorderIncident, updateIncidentStatus } from "./actions";
+import { reorderIncident, updateIncidentStatus } from "../actions";
 import { SeverityBadge, StatusIcon } from "./badges";
-import type { IncidentListItem } from "./queries";
-import { statusLabels, statusValues } from "./schema";
+import type { IncidentListItem } from "../queries";
+import { statusLabels, statusValues } from "../schema";
 
 type DropSlot = {
   status: IncidentStatus;

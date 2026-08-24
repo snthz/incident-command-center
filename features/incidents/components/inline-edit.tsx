@@ -4,8 +4,8 @@ import { useOptimistic, useRef, useState, useTransition } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toaster";
 import { cn } from "@/lib/cn";
-import { editIncidentText } from "./actions";
-import { editIncidentSchema } from "./schema";
+import { editIncidentText } from "../actions";
+import { editIncidentSchema } from "../schema";
 
 function IconButton({
   label,
